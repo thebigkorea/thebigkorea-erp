@@ -362,16 +362,24 @@ function updateSalesPeriodLabels(asOfDate){
   const prevLabel=`${prev.getFullYear()}.${prev.getMonth()+1}.1 ~ ${prev.getFullYear()}.${prev.getMonth()+1}.${prevDay}`;
   const yearLabel=`${year-1}.${month}.1 ~ ${year-1}.${month}.${day}`;
 
-  document.getElementById("salesCurrentPeriod").textContent=currentLabel;
-  document.getElementById("salesPrevPeriod").textContent=prevLabel+" 대비";
-  document.getElementById("salesYearPeriod").textContent=yearLabel+" 대비";
-  document.getElementById("salesComparisonGuide").textContent=
-    `${currentLabel} 누계를 전월·전년 동기간과 비교합니다.`;
+  const currentPeriodEl=document.getElementById("salesCurrentPeriod");
+  const prevPeriodEl=document.getElementById("salesPrevPeriod");
+  const yearPeriodEl=document.getElementById("salesYearPeriod");
+  const comparisonGuideEl=document.getElementById("salesComparisonGuide");
+  const yesterdayDateEl=document.getElementById("salesYesterdayDate");
 
-  const y=new Date();
-  y.setDate(y.getDate()-1);
-  document.getElementById("salesYesterdayDate").textContent=
-    `${y.getFullYear()}.${y.getMonth()+1}.${y.getDate()} 실적`;
+  if(currentPeriodEl) currentPeriodEl.textContent=currentLabel;
+  if(prevPeriodEl) prevPeriodEl.textContent=prevLabel+" 대비";
+  if(yearPeriodEl) yearPeriodEl.textContent=yearLabel+" 대비";
+  if(comparisonGuideEl){
+    comparisonGuideEl.textContent=`${currentLabel} 누계를 전월·전년 동기간과 비교합니다.`;
+  }
+
+  if(yesterdayDateEl){
+    const y=new Date();
+    y.setDate(y.getDate()-1);
+    yesterdayDateEl.textContent=`${y.getFullYear()}.${y.getMonth()+1}.${y.getDate()} 실적`;
+  }
 }
 
 function escapeHtml(v){
