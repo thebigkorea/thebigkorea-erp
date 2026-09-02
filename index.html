@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>더큰코리아 통합 ERP</title>
+  <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">TK</div>
+        <div>
+          <strong>더큰코리아</strong>
+          <span>통합 ERP</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="home"><span>⌂</span> ERP 홈</button>
+
+        <div class="nav-group-title">인사 · 급여</div>
+        <button class="nav-item" data-view="hr"><span>👥</span> 통합인사</button>
+        <button class="nav-item" data-view="attendance"><span>🕘</span> 근태 · 휴가</button>
+        <button class="nav-item" data-view="contract"><span>📝</span> 전자계약</button>
+        <button class="nav-item" data-view="payroll"><span>💳</span> 급여관리</button>
+        <button class="nav-item" data-view="tax"><span>🧾</span> 4대보험 · 세무</button>
+
+        <div class="nav-group-title">점포 · 운영</div>
+        <button class="nav-item" data-view="stores"><span>🏬</span> 점포관리</button>
+        <button class="nav-item" data-view="schedule"><span>📅</span> 근무스케줄</button>
+        <button class="nav-item" data-view="sales"><span>📈</span> 매출관리</button>
+        <button class="nav-item" data-view="opening"><span>🏗️</span> 신규점포 개설</button>
+
+        <div class="nav-group-title">재무 · 경영</div>
+        <button class="nav-item" data-view="purchase"><span>📦</span> 매입 · 원가</button>
+        <button class="nav-item" data-view="fund"><span>🏦</span> 경비 · 자금</button>
+        <button class="nav-item" data-view="profit"><span>📊</span> 손익관리</button>
+        <button class="nav-item" data-view="analysis"><span>🔎</span> 경영분석</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <small>THE BIG KOREA ERP V1</small>
+        <span>기존 시스템을 연결하는 통합 허브</span>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div>
+            <h1 id="pageTitle">ERP 홈</h1>
+            <p id="pageSubtitle">더큰코리아 전체 경영현황을 한눈에 확인합니다.</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <label class="month-box">기준월
+            <input type="month" id="erpMonth" />
+          </label>
+          <button class="icon-btn" id="refreshBtn">⟳ 새로고침</button>
+          <div class="user-chip">
+            <span class="user-avatar">관</span>
+            <div><strong>관리자</strong><small>본사 ERP</small></div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- HOME -->
+        <section class="view active" id="view-home">
+          <div class="hero-card">
+            <div>
+              <span class="eyebrow">THE BIG KOREA MANAGEMENT HUB</span>
+              <h2>인사부터 급여, 점포, 매출과 손익까지<br>하나의 ERP에서 연결합니다.</h2>
+              <p>기존 인트라넷과 각 시스템은 그대로 유지하고, ERP에서 통합 조회·연결하는 구조입니다.</p>
+            </div>
+            <div class="hero-badge">
+              <strong>통합현황</strong>
+              <span>인사 · 급여 · 점포 · 매출 · 손익</span>
+            </div>
+          </div>
+
+          <div class="section-title-row">
+            <div>
+              <h3>오늘의 통합 현황</h3>
+              <p>ERP V1 화면용 샘플 데이터입니다. 다음 단계에서 실제 시스템과 연결합니다.</p>
+            </div>
+            <span class="status-pill draft">V1 DESIGN</span>
+          </div>
+
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <span>재직 직원</span>
+              <strong id="kpiEmployees">72명</strong>
+              <small>통합 인사DB 기준</small>
+            </article>
+            <article class="kpi-card">
+              <span>직영점</span>
+              <strong>4개</strong>
+              <small>원가·손익 상세관리 대상</small>
+            </article>
+            <article class="kpi-card">
+              <span>위탁점</span>
+              <strong id="kpiManagedStores">-</strong>
+              <small>매출·계약 중심 관리</small>
+            </article>
+            <article class="kpi-card accent">
+              <span>이번달 급여</span>
+              <strong id="kpiPayroll">0원</strong>
+              <small>확정 급여 합계</small>
+            </article>
+            <article class="kpi-card">
+              <span>급여 확정</span>
+              <strong id="kpiConfirmed">0 / 0</strong>
+              <small>대상 직원 대비</small>
+            </article>
+            <article class="kpi-card warning">
+              <span>승인 대기</span>
+              <strong id="kpiPending">0건</strong>
+              <small>연월차 · 미휴무 · 계약</small>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel quick-panel">
+              <div class="panel-head">
+                <div><h3>자주 쓰는 업무</h3><p>기존 시스템을 그대로 연결합니다.</p></div>
+              </div>
+              <div class="quick-grid">
+                <button class="quick-card" data-system="hr">
+                  <span class="quick-icon">👥</span><strong>통합 인사정보</strong><small>직원조회 · 인사상태</small>
+                </button>
+                <button class="quick-card" data-system="leave">
+                  <span class="quick-icon">🌴</span><strong>연월차 · 미휴무</strong><small>신청 · 승인 · 원장</small>
+                </button>
+                <button class="quick-card" data-system="contract">
+                  <span class="quick-icon">✍️</span><strong>전자계약</strong><small>정규직 · 알바 · 용역</small>
+                </button>
+                <button class="quick-card" data-system="payroll">
+                  <span class="quick-icon">💰</span><strong>급여관리</strong><small>정규직 · 사업소득</small>
+                </button>
+                <button class="quick-card" data-system="directPayroll">
+                  <span class="quick-icon">🏪</span><strong>직영점 통합급여</strong><small>직영점 급여 통합관리</small>
+                </button>
+                <button class="quick-card" data-system="daily">
+                  <span class="quick-icon">🧤</span><strong>일용직 관리</strong><small>근무 · 지급 · 신고자료</small>
+                </button>
+                <button class="quick-card" data-system="sales">
+                  <span class="quick-icon">📈</span><strong>영업실적</strong><small>일매출 · 월간실적</small>
+                </button>
+                <button class="quick-card" data-system="schedule">
+                  <span class="quick-icon">🗓️</span><strong>근무 스케줄</strong><small>주간 · 월간 스케줄</small>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel alert-panel">
+              <div class="panel-head">
+                <div><h3>관리 알림</h3><p>미처리 업무를 모아서 표시합니다.</p></div>
+                <button class="text-btn">전체보기</button>
+              </div>
+              <div class="alert-list">
+                <div class="alert-item"><span class="dot red"></span><div><strong>급여 미확정</strong><small>확정 전 직원 급여가 있습니다.</small></div><b>확인</b></div>
+                <div class="alert-item"><span class="dot amber"></span><div><strong>연월차 승인 대기</strong><small>관리자 승인이 필요한 신청 건입니다.</small></div><b>확인</b></div>
+                <div class="alert-item"><span class="dot blue"></span><div><strong>계약 갱신 예정</strong><small>재계약 대상자를 확인하세요.</small></div><b>확인</b></div>
+                <div class="alert-item"><span class="dot green"></span><div><strong>영업실적 입력</strong><small>점포별 일일 실적 입력 상태를 확인합니다.</small></div><b>확인</b></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="dashboard-grid lower">
+            <section class="panel">
+              <div class="panel-head">
+                <div><h3>직영점 경영 현황</h3><p>직영점은 매출·인건비·원가·손익을 상세 관리합니다.</p></div>
+                <button class="text-btn" data-view-target="profit">손익관리 보기</button>
+              </div>
+              <div class="store-table-wrap">
+                <table class="store-table">
+                  <thead>
+                    <tr><th>점포</th><th>운영형태</th><th>매출</th><th>인건비</th><th>매입원가</th><th>영업이익</th><th>상태</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>한국의집 롯데월드몰</td><td><span class="type direct">직영</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="state good">연동예정</span></td></tr>
+                    <tr><td>길채정 압구정</td><td><span class="type direct">직영</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="state good">연동예정</span></td></tr>
+                    <tr><td>소바공방 평촌</td><td><span class="type direct">직영</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="state good">연동예정</span></td></tr>
+                    <tr><td>효종갱 파주</td><td><span class="type direct">직영</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="state good">연동예정</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div><h3>ERP 구축 단계</h3><p>기존 시스템을 순차적으로 연결합니다.</p></div>
+              </div>
+              <div class="roadmap">
+                <div class="roadmap-item done"><span>1</span><div><strong>ERP 홈</strong><small>메뉴 구조 · 통합 대시보드</small></div></div>
+                <div class="roadmap-item current"><span>2</span><div><strong>인사 · 급여 연결</strong><small>기존 시스템 API/링크 통합</small></div></div>
+                <div class="roadmap-item"><span>3</span><div><strong>점포 · 매출 연결</strong><small>직영/위탁 구분 관리</small></div></div>
+                <div class="roadmap-item"><span>4</span><div><strong>매입 · 자금 · 손익</strong><small>직영점 중심 경영관리</small></div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- Generic views -->
+        <section class="view" id="view-hr"></section>
+        <section class="view" id="view-attendance"></section>
+        <section class="view" id="view-contract"></section>
+        <section class="view" id="view-payroll"></section>
+        <section class="view" id="view-tax"></section>
+        <section class="view" id="view-stores"></section>
+        <section class="view" id="view-schedule"></section>
+        <section class="view" id="view-sales"></section>
+        <section class="view" id="view-opening"></section>
+        <section class="view" id="view-purchase"></section>
+        <section class="view" id="view-fund"></section>
+        <section class="view" id="view-profit"></section>
+        <section class="view" id="view-analysis"></section>
+      </main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
