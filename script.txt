@@ -100,10 +100,157 @@ const SYSTEM_LINKS = {
   contractService: "https://thebigkorea.github.io/hr-system/service-contract.html"
 };
 
+
+/* =========================================
+   ERP 홈 전 점포 매출 비교
+   실제 영업실적 API 연결 시 아래 함수에 데이터를 전달하면 됩니다.
+
+   payload 예시:
+   {
+     asOfDate: "2026-09-15",
+     yesterdaySales: 12345678,
+     stores: [
+       {
+         name: "한국의집 롯데월드몰",
+         operationType: "직영",
+         current: 120000000,
+         previousPeriod: 108000000,
+         previousYearPeriod: 99000000
+       }
+     ]
+   }
+========================================= */
+
+function numberOrZero(v){
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+}
+
+function money(v){
+  const n=numberOrZero(v);
+  return n.toLocaleString("ko-KR")+"원";
+}
+
+function changeRate(current, compare){
+  const a=numberOrZero(current);
+  const b=numberOrZero(compare);
+  if(!b) return null;
+  return ((a-b)/b)*100;
+}
+
+function changeHtml(current, compare){
+  const rate=changeRate(current,compare);
+  if(rate===null) return '<span class="sales-change same">-</span>';
+  const cls=rate>0?"up":rate<0?"down":"same";
+  const arrow=rate>0?"▲":rate<0?"▼":"";
+  return `<span class="sales-change ${cls}">${arrow}${Math.abs(rate).toFixed(1)}%</span>`;
+}
+
+function setSalesDashboardData(payload){
+  payload=payload||{};
+  const stores=Array.isArray(payload.stores)?payload.stores:[];
+
+  const body=document.getElementById("allStoreSalesBody");
+  if(!body)return;
+
+  if(!stores.length){
+    body.innerHTML=`
+      <tr class="sales-loading-row">
+        <td colspan="7">현재 조회할 매출 데이터가 없습니다.</td>
+      </tr>`;
+    document.getElementById("salesDataStatus").textContent="매출 데이터 없음";
+    return;
+  }
+
+  body.innerHTML=stores.map(s=>{
+    const current=numberOrZero(s.current);
+    const prev=numberOrZero(s.previousPeriod);
+    const year=numberOrZero(s.previousYearPeriod);
+    const type=String(s.operationType||"").trim()||"미분류";
+    const cls=type==="직영"?"direct":"consignment";
+
+    return `
+      <tr>
+        <td><strong>${escapeHtml(s.name||"-")}</strong></td>
+        <td><span class="type ${cls}">${escapeHtml(type)}</span></td>
+        <td>${money(current)}</td>
+        <td>${money(prev)}</td>
+        <td>${changeHtml(current,prev)}</td>
+        <td>${money(year)}</td>
+        <td>${changeHtml(current,year)}</td>
+      </tr>`;
+  }).join("");
+
+  const totalCurrent=stores.reduce((a,s)=>a+numberOrZero(s.current),0);
+  const totalPrev=stores.reduce((a,s)=>a+numberOrZero(s.previousPeriod),0);
+  const totalYear=stores.reduce((a,s)=>a+numberOrZero(s.previousYearPeriod),0);
+
+  document.getElementById("salesTotalCurrent").textContent=money(totalCurrent);
+  document.getElementById("salesVsPrev").innerHTML=changeHtml(totalCurrent,totalPrev);
+  document.getElementById("salesVsYear").innerHTML=changeHtml(totalCurrent,totalYear);
+  document.getElementById("salesYesterday").textContent=money(payload.yesterdaySales||0);
+
+  document.getElementById("salesFootCurrent").textContent=money(totalCurrent);
+  document.getElementById("salesFootPrev").textContent=money(totalPrev);
+  document.getElementById("salesFootPrevRate").innerHTML=changeHtml(totalCurrent,totalPrev);
+  document.getElementById("salesFootYear").textContent=money(totalYear);
+  document.getElementById("salesFootYearRate").innerHTML=changeHtml(totalCurrent,totalYear);
+
+  const status=document.getElementById("salesDataStatus");
+  status.textContent=`전 점포 ${stores.length}개 연동`;
+  status.classList.add("live");
+
+  updateSalesPeriodLabels(payload.asOfDate);
+}
+
+function updateSalesPeriodLabels(asOfDate){
+  const selected=document.getElementById("erpMonth")?.value;
+  if(!selected)return;
+
+  const [year,month]=selected.split("-").map(Number);
+  const today=new Date();
+  const selectedLastDay=new Date(year,month,0).getDate();
+  const isCurrentMonth=today.getFullYear()===year && today.getMonth()+1===month;
+  const day=isCurrentMonth ? Math.min(today.getDate(),selectedLastDay) : selectedLastDay;
+
+  const prev=new Date(year,month-2,1);
+  const prevLast=new Date(prev.getFullYear(),prev.getMonth()+1,0).getDate();
+  const prevDay=Math.min(day,prevLast);
+
+  const currentLabel=`${year}.${month}.1 ~ ${year}.${month}.${day}`;
+  const prevLabel=`${prev.getFullYear()}.${prev.getMonth()+1}.1 ~ ${prev.getFullYear()}.${prev.getMonth()+1}.${prevDay}`;
+  const yearLabel=`${year-1}.${month}.1 ~ ${year-1}.${month}.${day}`;
+
+  document.getElementById("salesCurrentPeriod").textContent=currentLabel;
+  document.getElementById("salesPrevPeriod").textContent=prevLabel+" 대비";
+  document.getElementById("salesYearPeriod").textContent=yearLabel+" 대비";
+  document.getElementById("salesComparisonGuide").textContent=
+    `${currentLabel} 누계를 전월·전년 동기간과 비교합니다.`;
+
+  const y=new Date();
+  y.setDate(y.getDate()-1);
+  document.getElementById("salesYesterdayDate").textContent=
+    `${y.getFullYear()}.${y.getMonth()+1}.${y.getDate()} 실적`;
+}
+
+function escapeHtml(v){
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
 function init(){
   const month = document.getElementById("erpMonth");
   const now = new Date();
   month.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  updateSalesPeriodLabels();
+  month.addEventListener("change",()=>{
+    updateSalesPeriodLabels();
+    // 실제 API 연결 후에는 여기에서 선택월 기준 매출 재조회 함수를 호출합니다.
+  });
 
   document.querySelectorAll(".nav-item").forEach(btn=>{
     btn.addEventListener("click",()=>openView(btn.dataset.view));
@@ -118,7 +265,7 @@ function init(){
   });
 
   document.getElementById("refreshBtn").addEventListener("click",()=>{
-    alert("V1은 화면 설계 단계입니다. 다음 단계에서 실제 ERP 데이터 새로고침과 연결합니다.");
+    alert("ERP 홈 매출 비교 화면이 준비되었습니다. 다음 단계에서 기존 영업실적 API를 연결하면 전 점포 실제 매출이 표시됩니다.");
   });
 
   document.querySelectorAll(".quick-card").forEach(btn=>{
