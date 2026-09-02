@@ -92,11 +92,9 @@ const MODULES = {
   ]
 };
 
-const MANAGEMENT_DASHBOARD_API_URL =
-  "https://script.google.com/macros/s/AKfycbxf_asvj2SIK2HI_tLF6--Gc2dyn4Clls-HhB4YIvGYOAMmT-4AkZ3lykYPMt-Fw9wAIg/exec";
-
 const SYSTEM_LINKS = {
-  // 실제 URL이 확정된 시스템부터 여기에 연결합니다.
+  // 기존 시스템 공통 연결 주소
+  managementDashboard: "https://script.google.com/macros/s/AKfycbzX4BEypYJv6h-5FZBTCFx1iJfHk-3DPBIHO9yRJfUmdXyy6xATo7vGnjG_T1swabh7XQ/exec",
   payroll: "https://thebigkorea.github.io/thebigkorea-payroll-test/",
   contractRegular: "https://thebigkorea.github.io/hr-system/regular-contract.html",
   contractPart: "https://thebigkorea.github.io/hr-system/part-contract.html",
@@ -337,7 +335,7 @@ function loadErpStoreSales(){
     });
 
   scriptTag.src=
-    MANAGEMENT_DASHBOARD_API_URL +
+    SYSTEM_LINKS.managementDashboard +
     "?" +
     params.toString();
 
@@ -388,19 +386,29 @@ function init(){
   const now = new Date();
   month.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   updateSalesPeriodLabels();
-  loadErpStoreSales();
 
   month.addEventListener("change",()=>{
     updateSalesPeriodLabels();
-    loadErpStoreSales();
   });
 
   document.querySelectorAll(".nav-item").forEach(btn=>{
-    btn.addEventListener("click",()=>openView(btn.dataset.view));
+    btn.addEventListener("click",()=>{
+      if(btn.dataset.view==="sales"){
+        window.open(SYSTEM_LINKS.managementDashboard,"_blank","noopener");
+        return;
+      }
+      openView(btn.dataset.view);
+    });
   });
 
   document.querySelectorAll("[data-view-target]").forEach(btn=>{
-    btn.addEventListener("click",()=>openView(btn.dataset.viewTarget));
+    btn.addEventListener("click",()=>{
+      if(btn.dataset.viewTarget==="sales"){
+        window.open(SYSTEM_LINKS.managementDashboard,"_blank","noopener");
+        return;
+      }
+      openView(btn.dataset.viewTarget);
+    });
   });
 
   document.getElementById("menuToggle").addEventListener("click",()=>{
@@ -408,7 +416,7 @@ function init(){
   });
 
   document.getElementById("refreshBtn").addEventListener("click",()=>{
-    alert("ERP 홈 매출 비교 화면이 준비되었습니다. 다음 단계에서 기존 영업실적 API를 연결하면 전 점포 실제 매출이 표시됩니다.");
+    window.location.reload();
   });
 
   document.querySelectorAll(".quick-card").forEach(btn=>{
@@ -461,7 +469,11 @@ function openModule(section,title){
     "급여관리": SYSTEM_LINKS.payroll,
     "정규직 근로계약": SYSTEM_LINKS.contractRegular,
     "아르바이트 근로계약": SYSTEM_LINKS.contractPart,
-    "사업소득·용역계약": SYSTEM_LINKS.contractService
+    "사업소득·용역계약": SYSTEM_LINKS.contractService,
+    "영업실적 보고": SYSTEM_LINKS.managementDashboard,
+    "월간 매출": SYSTEM_LINKS.managementDashboard,
+    "전년·전월 비교": SYSTEM_LINKS.managementDashboard,
+    "월간 경영보고": SYSTEM_LINKS.managementDashboard
   };
   if(known[title]){
     window.open(known[title],"_blank","noopener");
@@ -473,14 +485,15 @@ function openModule(section,title){
 function handleQuickSystem(key){
   const map={
     payroll:SYSTEM_LINKS.payroll,
-    contract:SYSTEM_LINKS.contractRegular
+    contract:SYSTEM_LINKS.contractRegular,
+    sales:SYSTEM_LINKS.managementDashboard
   };
   if(map[key]){
     window.open(map[key],"_blank","noopener");
     return;
   }
   const views={
-    hr:"hr",leave:"attendance",directPayroll:"payroll",daily:"payroll",sales:"sales",schedule:"schedule"
+    hr:"hr",leave:"attendance",directPayroll:"payroll",daily:"payroll",schedule:"schedule"
   };
   if(views[key]) openView(views[key]);
   else alert("기존 시스템 연결 준비중입니다.");
