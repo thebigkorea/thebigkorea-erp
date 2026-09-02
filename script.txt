@@ -92,6 +92,9 @@ const MODULES = {
   ]
 };
 
+const MANAGEMENT_DASHBOARD_API_URL =
+  "https://script.google.com/macros/s/AKfycbxf_asvj2SIK2HI_tLF6--Gc2dyn4Clls-HhB4YIvGYOAMmT-4AkZ3lykYPMt-Fw9wAIg/exec";
+
 const SYSTEM_LINKS = {
   // 실제 URL이 확정된 시스템부터 여기에 연결합니다.
   payroll: "https://thebigkorea.github.io/thebigkorea-payroll-test/",
@@ -203,6 +206,144 @@ function setSalesDashboardData(payload){
   updateSalesPeriodLabels(payload.asOfDate);
 }
 
+
+function loadErpStoreSales(){
+  const monthValue =
+    document.getElementById("erpMonth")?.value;
+
+  if(!monthValue){
+    return;
+  }
+
+  const parts=monthValue.split("-").map(Number);
+  const year=parts[0];
+  const month=parts[1];
+
+  const status=
+    document.getElementById("salesDataStatus");
+
+  if(status){
+    status.textContent="매출 데이터 불러오는 중";
+    status.classList.remove("live");
+  }
+
+  const callbackName=
+    "__erpSalesCallback_" + Date.now();
+
+  const scriptTag=
+    document.createElement("script");
+
+  let finished=false;
+
+  const cleanup=()=>{
+    if(finished)return;
+    finished=true;
+
+    try{
+      delete window[callbackName];
+    }catch(error){
+      window[callbackName]=undefined;
+    }
+
+    if(scriptTag.parentNode){
+      scriptTag.parentNode.removeChild(scriptTag);
+    }
+  };
+
+  const timer=setTimeout(()=>{
+    cleanup();
+
+    if(status){
+      status.textContent="매출 데이터 연결 실패";
+      status.classList.remove("live");
+    }
+
+    const body=
+      document.getElementById("allStoreSalesBody");
+
+    if(body){
+      body.innerHTML=`
+        <tr class="sales-loading-row">
+          <td colspan="7">
+            영업실적 데이터를 불러오지 못했습니다.
+            Apps Script 배포 상태를 확인해 주세요.
+          </td>
+        </tr>`;
+    }
+  },30000);
+
+  window[callbackName]=(payload)=>{
+    clearTimeout(timer);
+
+    if(
+      payload &&
+      payload.ok === true
+    ){
+      setSalesDashboardData(payload);
+
+      if(
+        payload.yesterdayDate &&
+        document.getElementById(
+          "salesYesterdayDate"
+        )
+      ){
+        document.getElementById(
+          "salesYesterdayDate"
+        ).textContent=
+          payload.yesterdayDate +
+          " 실적";
+      }
+    }else{
+      if(status){
+        status.textContent="매출 데이터 조회 오류";
+        status.classList.remove("live");
+      }
+
+      const message=
+        payload?.message ||
+        "매출 데이터를 조회하지 못했습니다.";
+
+      const body=
+        document.getElementById("allStoreSalesBody");
+
+      if(body){
+        body.innerHTML=`
+          <tr class="sales-loading-row">
+            <td colspan="7">${escapeHtml(message)}</td>
+          </tr>`;
+      }
+    }
+
+    cleanup();
+  };
+
+  scriptTag.onerror=()=>{
+    clearTimeout(timer);
+    cleanup();
+
+    if(status){
+      status.textContent="매출 데이터 연결 실패";
+      status.classList.remove("live");
+    }
+  };
+
+  const params=
+    new URLSearchParams({
+      action:"erpSalesComparison",
+      year:String(year),
+      month:String(month),
+      callback:callbackName,
+      t:String(Date.now())
+    });
+
+  scriptTag.src=
+    MANAGEMENT_DASHBOARD_API_URL +
+    "?" +
+    params.toString();
+
+  document.head.appendChild(scriptTag);
+}
+
 function updateSalesPeriodLabels(asOfDate){
   const selected=document.getElementById("erpMonth")?.value;
   if(!selected)return;
@@ -247,9 +388,11 @@ function init(){
   const now = new Date();
   month.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   updateSalesPeriodLabels();
+  loadErpStoreSales();
+
   month.addEventListener("change",()=>{
     updateSalesPeriodLabels();
-    // 실제 API 연결 후에는 여기에서 선택월 기준 매출 재조회 함수를 호출합니다.
+    loadErpStoreSales();
   });
 
   document.querySelectorAll(".nav-item").forEach(btn=>{
