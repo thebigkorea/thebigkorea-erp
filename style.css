@@ -307,3 +307,17 @@ button{cursor:pointer}
 #homeHqTaskAlert{cursor:pointer;background:#fffaf2}
 @media(max-width:1100px){.hq-task-kpis{grid-template-columns:repeat(2,1fr)}.hq-task-layout{grid-template-columns:1fr}}
 @media(max-width:600px){.hq-task-kpis{grid-template-columns:1fr}.hq-form-row{grid-template-columns:1fr}.hq-task-hero{align-items:flex-start;flex-direction:column}}
+
+
+/* 홈 본사 업무현황 V8 */
+.kpi-card.clickable{cursor:pointer;transition:.18s}
+.kpi-card.clickable:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(31,45,61,.09)}
+.kpi-card.danger{border-top:3px solid var(--red)}
+.home-task-link{border:0;cursor:pointer}
+.company-status-row{margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 3px 12px rgba(31,45,61,.03)}
+.company-status-row>div{font-size:10px;color:var(--muted)}
+.company-status-row>div:first-child{display:flex;align-items:center;gap:12px}
+.company-status-row span{font-weight:900;color:#657382}
+.company-status-row strong{font-size:10px;color:#657382}
+.company-status-row b{font-size:11px;color:var(--text);margin-left:3px}
+@media(max-width:700px){.company-status-row{gap:10px}.company-status-row>div{width:calc(50% - 8px)}}

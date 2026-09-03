@@ -999,6 +999,7 @@ function toggleHqTaskDone(id,dateKey){
   state.done[key]=!state.done[key];
   saveHqTaskState(state);
   renderHqTaskView();
+  updateHomeHqTaskSummary();
 }
 function addHqTask(){
   const title=document.getElementById("hqTaskTitle")?.value.trim();
@@ -1011,13 +1012,14 @@ function addHqTask(){
   saveHqTaskState(state);
   document.getElementById("hqTaskTitle").value="";
   renderHqTaskView();
+  updateHomeHqTaskSummary();
 }
 function deleteHqTask(id){
   if(!String(id).startsWith("custom-")) return;
   if(!confirm("등록한 업무를 삭제할까요?")) return;
   const state=loadHqTaskState();
   state.custom=(state.custom||[]).filter(x=>x.id!==id);
-  saveHqTaskState(state);renderHqTaskView();
+  saveHqTaskState(state);renderHqTaskView();updateHomeHqTaskSummary();
 }
 function buildHqTaskView(){
   const el=document.getElementById("view-hqtasks"); if(!el)return;
@@ -1080,11 +1082,57 @@ function renderHqTaskView(){
   }).join("");
 }
 function updateHomeHqTaskSummary(){
+  const today=new Date();
+  const todayKey=hqTaskDateKey(today);
+  const tasks=getHqTasks();
+  const state=loadHqTaskState();
+
+  const dueToday=tasks.filter(t=>isHqTaskDue(t,today));
+  const doneToday=dueToday.filter(t=>hqTaskStatus(t,today));
+  const pendingToday=dueToday.filter(t=>!hqTaskStatus(t,today));
+
+  const inDays=(base,days)=>{
+    const d=new Date(base.getFullYear(),base.getMonth(),base.getDate());
+    d.setDate(d.getDate()+days);
+    return d;
+  };
+
+  const soonEnd=inDays(today,7);
+  const soon=tasks.filter(t=>{
+    const n=hqTaskNextDate(t,today);
+    return n && n>today && n<=soonEnd;
+  });
+
+  // 직접 지정 업무 중 기한이 지났는데 완료되지 않은 항목
+  const overdue=tasks.filter(t=>{
+    if(t.rule!=="DATE" || !t.date) return false;
+    const d=new Date(t.date+"T00:00:00");
+    if(d>=today) return false;
+    return !state.done?.[`${t.id}|${t.date}`];
+  });
+
+  // 이번 달에 한 번 이상 발생하는 업무
+  const y=today.getFullYear(), m=today.getMonth();
+  const monthStart=new Date(y,m,1), monthEnd=new Date(y,m+1,0);
+  const monthTasks=tasks.filter(t=>{
+    for(let d=new Date(monthStart); d<=monthEnd; d.setDate(d.getDate()+1)){
+      if(isHqTaskDue(t,d)) return true;
+    }
+    return false;
+  });
+
+  const setText=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  setText("homeTaskToday",dueToday.length+"건");
+  setText("homeTaskDone",doneToday.length+"건");
+  setText("homeTaskPending",pendingToday.length+"건");
+  setText("homeTaskSoon",soon.length+"건");
+  setText("homeTaskOverdue",overdue.length+"건");
+  setText("homeTaskMonth",monthTasks.length+"건");
+
   const alertList=document.querySelector("#view-home .alert-list");if(!alertList)return;
-  const today=new Date(), due=getHqTasks().filter(t=>isHqTaskDue(t,today)), pending=due.filter(t=>!hqTaskStatus(t,today));
   const old=document.getElementById("homeHqTaskAlert");if(old)old.remove();
   const item=document.createElement("div");item.id="homeHqTaskAlert";item.className="alert-item";
-  item.innerHTML=`<span class="dot ${pending.length?"red":"green"}"></span><div><strong>오늘 본사 업무 ${pending.length?pending.length+"건 미처리":"처리 완료"}</strong><small>${pending.length?pending.slice(0,2).map(x=>escapeHtml(x.title)).join(" · "):"오늘 예정 업무를 모두 완료했습니다."}</small></div><b>확인</b>`;
+  item.innerHTML=`<span class="dot ${overdue.length?"red":pendingToday.length?"amber":"green"}"></span><div><strong>${overdue.length?`기한 경과 ${overdue.length}건`:pendingToday.length?`오늘 본사 업무 ${pendingToday.length}건 미처리`:"오늘 본사 업무 처리 완료"}</strong><small>${overdue.length?overdue.slice(0,2).map(x=>escapeHtml(x.title)).join(" · "):pendingToday.length?pendingToday.slice(0,2).map(x=>escapeHtml(x.title)).join(" · "):"오늘 예정 업무를 모두 완료했습니다."}</small></div><b>확인</b>`;
   item.onclick=()=>openView("hqtasks");alertList.prepend(item);
 }
 
