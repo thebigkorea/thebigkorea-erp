@@ -180,47 +180,47 @@ button{cursor:pointer}
 
 
 /* =========================================
-   경비 · 자금 전용 화면
+   경비 · 자금 전용 화면 V3
 ========================================= */
 .fund-hero{display:flex;align-items:center;justify-content:space-between;gap:18px}
 .fund-hero .eyebrow{color:#9c7443}
-.fund-connection-box{display:flex;align-items:center;gap:10px;min-width:220px;border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#f9fbfc}
+.fund-connection-box{display:flex;align-items:center;gap:10px;min-width:250px;border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#f9fbfc}
 .fund-connection-dot{width:10px;height:10px;border-radius:50%;background:#aab4bf;box-shadow:0 0 0 4px #edf1f4}
-.fund-connection-dot.ready{background:var(--amber);box-shadow:0 0 0 4px #fbf0d9}
+.fund-connection-dot.ready{background:var(--green);box-shadow:0 0 0 4px #e5f4ec}
 .fund-connection-box strong,.fund-connection-box small{display:block}
 .fund-connection-box strong{font-size:12px}
 .fund-connection-box small{font-size:10px;color:var(--muted);margin-top:4px}
 
-.fund-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.fund-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .fund-kpi-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px 18px;min-height:110px;box-shadow:0 4px 16px rgba(31,45,61,.04);border-top:3px solid #9aa6b2}
 .fund-kpi-card.income{border-top-color:var(--green)}
 .fund-kpi-card.expense{border-top-color:var(--red)}
 .fund-kpi-card.warning{border-top-color:var(--amber)}
+.fund-kpi-card.posted{border-top-color:var(--blue)}
 .fund-kpi-card span{display:block;font-size:11px;color:var(--muted);font-weight:800}
-.fund-kpi-card strong{display:block;font-size:23px;margin:12px 0 7px;font-variant-numeric:tabular-nums}
+.fund-kpi-card strong{display:block;font-size:22px;margin:12px 0 7px;font-variant-numeric:tabular-nums}
 .fund-kpi-card small{font-size:10px;color:#98a3ae}
 
-.fund-layout{display:grid;grid-template-columns:1.35fr .85fr;gap:14px;margin-bottom:14px}
+.fund-layout{display:grid;grid-template-columns:1.25fr .85fr;gap:14px;margin-bottom:14px}
 .fund-account-list{display:grid;gap:8px}
 .fund-account-item{display:grid;grid-template-columns:40px 1fr auto;gap:11px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:11px 12px}
 .fund-bank-icon{width:38px;height:38px;border-radius:10px;background:#eef2f6;display:grid;place-items:center}
 .fund-account-main strong,.fund-account-main small,.fund-account-balance strong,.fund-account-balance small{display:block}
 .fund-account-main strong{font-size:11px}.fund-account-main small{font-size:10px;color:var(--muted);margin-top:4px}
-.fund-account-balance{text-align:right}.fund-account-balance strong{font-size:12px;font-variant-numeric:tabular-nums}.fund-account-balance small{font-size:9px;color:#8995a2;margin-top:4px}.fund-account-balance small.ok{color:var(--green)}
+.fund-account-balance{text-align:right}.fund-account-balance strong{font-size:13px;font-variant-numeric:tabular-nums}.fund-account-balance small{font-size:9px;color:#8995a2;margin-top:4px}.fund-account-balance small.ok{color:var(--green)}
 
 .fund-empty{border:1px dashed #ccd5dd;border-radius:12px;padding:24px;text-align:center;background:#fafbfc}
 .fund-empty strong,.fund-empty span{display:block}
 .fund-empty strong{font-size:12px}.fund-empty span{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5}
 
-.fund-flow-bars{display:grid;gap:15px;padding:6px 0}
-.fund-flow-row{display:grid;grid-template-columns:34px 1fr 96px;align-items:center;gap:10px}
+.fund-flow-panel .fund-flow-row{display:grid;grid-template-columns:34px 1fr 105px;align-items:center;gap:10px;margin:14px 0}
 .fund-flow-row>span{font-size:10px;font-weight:900;color:#647180}
 .fund-flow-row>strong{text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
-.fund-bar{height:10px;border-radius:999px;background:#edf1f4;overflow:hidden}
-.fund-bar i{display:block;height:100%;width:0;border-radius:999px;background:#6b879f;transition:.25s}
-.fund-flow-row:first-child .fund-bar i{background:var(--green)}
-.fund-flow-row:nth-child(2) .fund-bar i{background:var(--red)}
-.fund-note{margin-top:18px}
+.fund-flow-track{height:10px;border-radius:999px;background:#edf1f4;overflow:hidden}
+.fund-flow-track i{display:block;height:100%;width:0;border-radius:999px;transition:.25s}
+.fund-flow-track i.in{background:var(--green)}
+.fund-flow-track i.out{background:var(--red)}
+.fund-note{margin-top:18px;background:#f7f9fb;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:10px;color:#687684;line-height:1.55}
 
 .fund-transactions-panel{min-width:0}
 .fund-head-wrap{gap:12px}
@@ -234,11 +234,11 @@ button{cursor:pointer}
 .fund-filter-grid input,.fund-filter-grid select{width:100%;height:34px;margin-top:6px;border:1px solid #dce2e8;border-radius:8px;background:#fff;padding:0 9px;color:#36414d;font-size:10px}
 
 .fund-tabs{display:flex;gap:5px;margin-bottom:10px;overflow:auto}
-.fund-tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-size:10px;font-weight:900;color:#687684;white-space:nowrap}
+.fund-tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:10px;font-weight:900;color:#687684;white-space:nowrap}
 .fund-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
 
-.fund-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-.fund-table{width:100%;border-collapse:collapse;min-width:1180px}
+.fund-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:520px}
+.fund-table{width:100%;border-collapse:collapse;min-width:1080px}
 .fund-table th{position:sticky;top:0;z-index:1;background:#f7f9fb;color:#74818f;font-size:9px;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 .fund-table td{padding:9px 10px;border-bottom:1px solid #edf0f3;font-size:10px;vertical-align:middle}
 .fund-table tbody tr:hover{background:#fafbfc}
@@ -248,12 +248,13 @@ button{cursor:pointer}
 .fund-type,.fund-status{display:inline-block;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}
 .fund-type.in{background:#e7f5ee;color:#16734a}.fund-type.out{background:#fdeaea;color:#b84343}
 .fund-status.done{background:#e8f1ff;color:#2e61ad}.fund-status.pending{background:#fff1dd;color:#9a6518}
-.fund-inline-select{height:30px;min-width:94px;border:1px solid #dde3e9;border-radius:7px;background:#fff;font-size:9px;padding:0 6px}
 .fund-empty-row td{text-align:center!important;padding:34px 12px!important;color:#84909c}
 .fund-empty-row strong,.fund-empty-row span{display:block}.fund-empty-row strong{font-size:12px}.fund-empty-row span{font-size:10px;margin-top:6px}
 
+@media(max-width:1300px){
+  .fund-kpi-grid{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:1200px){
-  .fund-kpi-grid{grid-template-columns:repeat(2,1fr)}
   .fund-filter-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:900px){
@@ -261,8 +262,9 @@ button{cursor:pointer}
   .fund-hero{align-items:flex-start;flex-direction:column}
   .fund-connection-box{width:100%}
 }
-@media(max-width:560px){
+@media(max-width:650px){
   .fund-kpi-grid{grid-template-columns:1fr}
   .fund-filter-grid{grid-template-columns:1fr}
   .fund-head-wrap{align-items:flex-start;flex-direction:column}
 }
+
