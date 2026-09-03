@@ -103,6 +103,9 @@ const SYSTEM_LINKS = {
   contractService: "https://thebigkorea.github.io/hr-system/service-contract.html"
 };
 
+const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
+const FUND_CATEGORY_OPTIONS = ["미분류","매출입금","식자재비","인건비","4대보험","임차료","수수료","공과금","세금","카드대금","기타"];
+
 
 /* =========================================
    ERP 홈 전 점포 매출 비교
@@ -434,6 +437,7 @@ function init(){
   });
 
   buildModuleViews();
+  loadFundData();
 }
 
 function openView(view){
@@ -443,7 +447,6 @@ function openView(view){
   if(target) target.classList.add("active");
   if(view==="fund" && document.getElementById("fundDashboard")){
     renderFundDashboard();
-    loadFundData();
   }
   const meta=PAGE_META[view]||["ERP",""];
   document.getElementById("pageTitle").textContent=meta[0];
@@ -455,93 +458,13 @@ function openView(view){
 
 /* =========================================
    경비 · 자금 전용 화면
-   현재는 화면/데이터 어댑터를 먼저 구성합니다.
-   ECOUNT 연동부가 준비되면 setFundData(payload)에
-   실제 데이터를 전달하면 그대로 화면에 반영됩니다.
+   ECOUNT 금융거래원장 Apps Script 연동
 ========================================= */
-
-const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
-
-let fundLoadingPromise = null;
-
-async function loadFundData(force=false){
-  if(fundLoadingPromise && !force) return fundLoadingPromise;
-
-  const sourceEl=document.getElementById("fundSourceStatus");
-  const timeEl=document.getElementById("fundSyncTime");
-  if(sourceEl) sourceEl.textContent="ECOUNT 금융자료 불러오는 중";
-  if(timeEl) timeEl.textContent="Google Sheet 금융거래원장 조회 중";
-
-  fundLoadingPromise=(async()=>{
-    try{
-      const sep=FUND_API_URL.includes("?")?"&":"?";
-      const url=`${FUND_API_URL}${sep}action=getFundData&_=${Date.now()}`;
-      const res=await fetch(url,{method:"GET",cache:"no-store"});
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const json=await res.json();
-
-      if(json && json.success===false){
-        throw new Error(json.message||json.error||"금융자료 조회 실패");
-      }
-
-      // Apps Script 응답 구조가 {data:...}, {payload:...} 또는 직접 payload인 경우 모두 대응
-      const payload=json?.data?.payload || json?.payload || json?.data || json;
-
-      const transactions=Array.isArray(payload?.transactions)
-        ? payload.transactions.map(t=>{
-            const type=String(t.type||"").trim();
-            const amount=fundNumber(t.amount);
-            return {
-              ...t,
-              amount,
-              income:type==="입금" ? (fundNumber(t.income)||amount) : 0,
-              expense:type==="출금" ? (fundNumber(t.expense)||amount) : 0,
-              balance:fundNumber(t.balance)
-            };
-          })
-        : [];
-
-      const accounts=Array.isArray(payload?.accounts)
-        ? payload.accounts.map(a=>({...a,balance:fundNumber(a.balance)}))
-        : [];
-
-      setFundData({
-        source:payload?.source||"ECOUNT",
-        syncedAt:payload?.syncedAt||payload?.meta?.syncedAt||"",
-        accounts,
-        transactions,
-        meta:payload?.meta||{}
-      });
-
-      console.log(`[ERP 금융자료] 계좌 ${accounts.length}개 / 거래 ${transactions.length}건`);
-      return true;
-    }catch(err){
-      console.error("[ERP 금융자료 조회 오류]",err);
-      fundState.source="ECOUNT 연동 오류";
-      if(sourceEl) sourceEl.textContent="ECOUNT 연동 오류";
-      if(timeEl) timeEl.textContent=`조회 실패: ${err.message}`;
-      return false;
-    }finally{
-      fundLoadingPromise=null;
-    }
-  })();
-
-  return fundLoadingPromise;
-}
-
-const FUND_STORE_OPTIONS = ["본사","한국의집","길채정","소바공방","고궁","효종갱","공통","미지정"];
-
-const FUND_DEMO_DATA = {
-  source:"ECOUNT 연동 준비",
-  syncedAt:"",
-  accounts:[],
-  transactions:[]
-};
+const FUND_STORE_OPTIONS = ["미지정","본사","한국의집","길채정","소바공방","고궁","효종갱","공통"];
 
 let fundState = {
-  source:FUND_DEMO_DATA.source,
-  syncedAt:FUND_DEMO_DATA.syncedAt,
+  source:"ECOUNT",
+  syncedAt:"",
   accounts:[],
   transactions:[],
   filtered:[]
@@ -556,388 +479,198 @@ function fundMoney(v){
   return fundNumber(v).toLocaleString("ko-KR")+"원";
 }
 
+function fundFormatDateTime(value){
+  if(!value) return "-";
+  const raw=String(value).trim();
+  const d=new Date(raw);
+  if(!Number.isNaN(d.getTime())){
+    return new Intl.DateTimeFormat("ko-KR",{
+      timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hour12:false
+    }).format(d).replace(/\. /g,"-").replace(/\./g,"").replace(/, /," ");
+  }
+  return raw.replace("T"," ").replace(/\.000Z$/i,"").slice(0,16);
+}
+
+function jsonpFund(params){
+  return new Promise((resolve,reject)=>{
+    const cb="__fundCb_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+    const script=document.createElement("script");
+    const timer=setTimeout(()=>finish(new Error("금융자료 서버 응답시간 초과")),20000);
+    function finish(err,data){
+      clearTimeout(timer);
+      try{ delete window[cb]; }catch(_){ window[cb]=undefined; }
+      script.remove();
+      err?reject(err):resolve(data);
+    }
+    window[cb]=data=>finish(null,data);
+    const q=new URLSearchParams({...params,callback:cb,_:Date.now()});
+    script.src=FUND_API_URL+"?"+q.toString();
+    script.onerror=()=>finish(new Error("금융자료 서버 연결 실패"));
+    document.head.appendChild(script);
+  });
+}
+
+async function loadFundData(){
+  try{
+    setText("fundSourceStatus","ECOUNT 자동연동 확인중");
+    setText("fundSyncTime","금융거래원장 불러오는 중");
+    const payload=await jsonpFund({action:"getFundData"});
+    if(!payload?.ok) throw new Error(payload?.message||"금융자료 조회 실패");
+    setFundData(payload);
+  }catch(err){
+    console.error("[FUND]",err);
+    setText("fundSourceStatus","ECOUNT 연동 오류");
+    setText("fundSyncTime",err.message||"금융자료를 불러오지 못했습니다.");
+  }
+}
+
 function setFundData(payload){
   payload=payload||{};
   fundState.source=payload.source||"ECOUNT";
   fundState.syncedAt=payload.syncedAt||"";
-  fundState.accounts=Array.isArray(payload.accounts)
-    ? payload.accounts.map(a=>({...a,balance:fundNumber(a.balance)}))
-    : [];
-  fundState.transactions=Array.isArray(payload.transactions)
-    ? payload.transactions.map(t=>{
-        const type=String(t.type||"").trim();
-        const amount=fundNumber(t.amount);
-        return {
-          ...t,
-          amount,
-          income:type==="입금" ? (fundNumber(t.income)||amount) : 0,
-          expense:type==="출금" ? (fundNumber(t.expense)||amount) : 0,
-          balance:fundNumber(t.balance)
-        };
-      })
-    : [];
+  fundState.accounts=Array.isArray(payload.accounts)?payload.accounts:[];
+  fundState.transactions=Array.isArray(payload.transactions)?payload.transactions:[];
   fundState.filtered=[...fundState.transactions];
-
-  if(document.getElementById("fundDashboard")){
-    renderFundDashboard();
-  }
+  if(document.getElementById("fundDashboard")) renderFundDashboard();
 }
 
 function buildFundView(){
   const el=document.getElementById("view-fund");
   if(!el)return;
-
   el.innerHTML=`
     <section class="module-hero fund-hero">
       <div>
         <span class="eyebrow">CASH & BANK MANAGEMENT</span>
         <h2>경비 · 자금</h2>
-        <p>ECOUNT에 수집되는 법인계좌 거래를 ERP에서 통합 조회하고 자동분류·점포귀속·자금일보로 연결합니다.</p>
+        <p>ECOUNT 법인계좌 거래를 자동 수집하여 분류·점포귀속·자금일보·손익관리로 연결합니다.</p>
       </div>
       <div class="fund-connection-box">
         <span class="fund-connection-dot ready"></span>
         <div>
-          <strong id="fundSourceStatus">ECOUNT 연동 준비</strong>
-          <small id="fundSyncTime">실데이터 연결 전</small>
+          <strong id="fundSourceStatus">ECOUNT 자동연동</strong>
+          <small id="fundSyncTime">금융거래원장 연결 확인중</small>
         </div>
       </div>
     </section>
-
     <div id="fundDashboard">
       <div class="fund-kpi-grid">
-        <article class="fund-kpi-card">
-          <span>전체 계좌 잔액</span>
-          <strong id="fundTotalBalance">0원</strong>
-          <small id="fundAccountCount">연결 계좌 0개</small>
-        </article>
-        <article class="fund-kpi-card income">
-          <span>조회기간 입금</span>
-          <strong id="fundTotalIncome">0원</strong>
-          <small id="fundIncomeCount">0건</small>
-        </article>
-        <article class="fund-kpi-card expense">
-          <span>조회기간 출금</span>
-          <strong id="fundTotalExpense">0원</strong>
-          <small id="fundExpenseCount">0건</small>
-        </article>
-        <article class="fund-kpi-card warning">
-          <span>미분류 거래</span>
-          <strong id="fundUnclassifiedCount">0건</strong>
-          <small id="fundUnclassifiedAmount">0원</small>
-        </article>
+        <article class="fund-kpi-card"><span>전체 계좌 잔액</span><strong id="fundTotalBalance">0원</strong><small id="fundAccountCount">연결 계좌 0개</small></article>
+        <article class="fund-kpi-card income"><span>조회기간 입금</span><strong id="fundTotalIncome">0원</strong><small id="fundIncomeCount">0건</small></article>
+        <article class="fund-kpi-card expense"><span>조회기간 출금</span><strong id="fundTotalExpense">0원</strong><small id="fundExpenseCount">0건</small></article>
+        <article class="fund-kpi-card warning"><span>미분류 거래</span><strong id="fundUnclassifiedCount">0건</strong><small id="fundUnclassifiedAmount">0원</small></article>
       </div>
-
       <div class="fund-layout">
         <section class="panel fund-account-panel">
-          <div class="panel-head">
-            <div><h3>계좌 현황</h3><p>은행별 법인계좌 잔액과 수집상태</p></div>
-            <button class="text-btn" type="button" onclick="showFundTab('accounts')">전체보기</button>
-          </div>
+          <div class="panel-head"><div><h3>계좌 현황</h3><p>은행별 법인계좌 잔액과 수집상태</p></div><button class="text-btn" type="button" onclick="loadFundData()">새로고침</button></div>
           <div id="fundAccountList" class="fund-account-list"></div>
         </section>
-
         <section class="panel fund-flow-panel">
-          <div class="panel-head">
-            <div><h3>자금 흐름</h3><p>조회된 거래의 입금·출금 요약</p></div>
-          </div>
-          <div class="fund-flow-bars">
-            <div class="fund-flow-row">
-              <span>입금</span>
-              <div class="fund-bar"><i id="fundIncomeBar"></i></div>
-              <strong id="fundIncomeBarText">0원</strong>
-            </div>
-            <div class="fund-flow-row">
-              <span>출금</span>
-              <div class="fund-bar"><i id="fundExpenseBar"></i></div>
-              <strong id="fundExpenseBarText">0원</strong>
-            </div>
-          </div>
-          <div class="note-box fund-note">
-            실제 ECOUNT 연결 전에는 금융정보를 임의 생성하지 않습니다. 연동 데이터가 들어오면 이 화면이 자동으로 갱신됩니다.
-          </div>
+          <div class="panel-head"><div><h3>자금 흐름</h3><p>조회된 거래의 입금·출금 요약</p></div></div>
+          <div class="fund-flow-row"><span>입금</span><div class="fund-flow-track"><i id="fundIncomeBar" class="in"></i></div><strong id="fundIncomeBarText">0원</strong></div>
+          <div class="fund-flow-row"><span>출금</span><div class="fund-flow-track"><i id="fundExpenseBar" class="out"></i></div><strong id="fundExpenseBarText">0원</strong></div>
+          <div class="fund-note">ECOUNT 거래 수집 → ERP 금융거래원장 → 분류·귀속 저장 → 손익관리 연결 구조입니다.</div>
         </section>
       </div>
-
-      <section class="panel fund-transactions-panel">
-        <div class="panel-head fund-head-wrap">
-          <div><h3>입출금 거래내역</h3><p>기간·계좌·입출금·분류상태로 조회합니다.</p></div>
-          <div class="fund-actions">
-            <button class="fund-btn secondary" type="button" onclick="resetFundFilters()">초기화</button>
-            <button class="fund-btn primary" type="button" onclick="applyFundFilters()">조회</button>
-          </div>
-        </div>
-
+      <section class="panel fund-transaction-panel">
+        <div class="panel-head"><div><h3>입출금 거래내역</h3><p>분류와 귀속을 변경하면 금융거래원장에 즉시 저장됩니다.</p></div><div class="fund-head-actions"><button class="fund-btn" type="button" onclick="resetFundFilters()">초기화</button><button class="fund-btn primary" type="button" onclick="applyFundFilters()">조회</button></div></div>
         <div class="fund-filter-grid">
-          <label>시작일
-            <input type="date" id="fundStartDate">
-          </label>
-          <label>종료일
-            <input type="date" id="fundEndDate">
-          </label>
-          <label>계좌
-            <select id="fundAccountFilter"><option value="">전체 계좌</option></select>
-          </label>
-          <label>구분
-            <select id="fundTypeFilter">
-              <option value="">전체</option>
-              <option value="입금">입금</option>
-              <option value="출금">출금</option>
-            </select>
-          </label>
-          <label>분류상태
-            <select id="fundClassFilter">
-              <option value="">전체</option>
-              <option value="분류완료">분류완료</option>
-              <option value="미분류">미분류</option>
-            </select>
-          </label>
-          <label>검색
-            <input type="search" id="fundKeyword" placeholder="적요·거래처·계좌명">
-          </label>
+          <label>시작일<input type="date" id="fundStartDate"></label>
+          <label>종료일<input type="date" id="fundEndDate"></label>
+          <label>계좌<select id="fundAccountFilter"><option value="">전체 계좌</option></select></label>
+          <label>구분<select id="fundTypeFilter"><option value="">전체</option><option value="입금">입금</option><option value="출금">출금</option></select></label>
+          <label>분류상태<select id="fundClassFilter"><option value="">전체</option><option value="분류완료">분류완료</option><option value="미분류">미분류</option></select></label>
+          <label>검색<input type="search" id="fundKeyword" placeholder="적요·거래처·계좌명"></label>
         </div>
-
         <div class="fund-tabs">
-          <button class="fund-tab active" data-fund-tab="all" onclick="showFundTab('all',this)">전체 거래</button>
-          <button class="fund-tab" data-fund-tab="unclassified" onclick="showFundTab('unclassified',this)">미분류</button>
-          <button class="fund-tab" data-fund-tab="accounts" onclick="showFundTab('accounts',this)">계좌별</button>
-          <button class="fund-tab" data-fund-tab="daily" onclick="showFundTab('daily',this)">자금일보</button>
+          <button class="fund-tab active" onclick="showFundTab('all',this)">전체 거래</button>
+          <button class="fund-tab" onclick="showFundTab('unclassified',this)">미분류</button>
+          <button class="fund-tab" onclick="showFundTab('accounts',this)">계좌별</button>
+          <button class="fund-tab" onclick="showFundTab('daily',this)">자금일보</button>
         </div>
-
-        <div class="fund-table-wrap">
-          <table class="fund-table">
-            <thead>
-              <tr>
-                <th>거래일시</th>
-                <th>구분</th>
-                <th>계좌명</th>
-                <th>적요 / 거래처</th>
-                <th>입금</th>
-                <th>출금</th>
-                <th>잔액</th>
-                <th>분류</th>
-                <th>귀속</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody id="fundTransactionBody"></tbody>
-          </table>
-        </div>
+        <div class="fund-table-wrap"><table class="fund-table"><thead><tr><th>거래일시</th><th>구분</th><th>계좌명</th><th>적요 / 거래처</th><th>입금</th><th>출금</th><th>잔액</th><th>분류</th><th>귀속</th><th>상태</th></tr></thead><tbody id="fundTransactionBody"></tbody></table></div>
       </section>
-    </div>
-  `;
-
+    </div>`;
   initFundDateRange();
   renderFundDashboard();
 }
 
 function initFundDateRange(){
-  const end=new Date();
-  const start=new Date();
-  start.setDate(end.getDate()-6);
-
-  const fmt=d=>{
-    const y=d.getFullYear();
-    const m=String(d.getMonth()+1).padStart(2,"0");
-    const day=String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
-  };
-
-  const startEl=document.getElementById("fundStartDate");
-  const endEl=document.getElementById("fundEndDate");
-  if(startEl&&!startEl.value)startEl.value=fmt(start);
-  if(endEl&&!endEl.value)endEl.value=fmt(end);
+  const end=new Date(), start=new Date(); start.setDate(end.getDate()-6);
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const a=document.getElementById("fundStartDate"), b=document.getElementById("fundEndDate");
+  if(a&&!a.value)a.value=fmt(start); if(b&&!b.value)b.value=fmt(end);
 }
 
 function renderFundDashboard(){
-  const accounts=fundState.accounts||[];
-  const txs=fundState.filtered?.length || fundState.transactions.length===0
-    ? (fundState.filtered||[])
-    : fundState.transactions;
-
-  const totalBalance=accounts.reduce((sum,a)=>sum+fundNumber(a.balance),0);
-  const income=txs.filter(t=>t.type==="입금").reduce((sum,t)=>sum+fundNumber(t.amount),0);
-  const expense=txs.filter(t=>t.type==="출금").reduce((sum,t)=>sum+fundNumber(t.amount),0);
-  const incomeCount=txs.filter(t=>t.type==="입금").length;
-  const expenseCount=txs.filter(t=>t.type==="출금").length;
-  const unclassified=txs.filter(t=>!t.category || t.category==="미분류");
-  const unclassifiedAmount=unclassified.reduce((sum,t)=>sum+fundNumber(t.amount),0);
-
-  setText("fundTotalBalance",fundMoney(totalBalance));
-  setText("fundAccountCount",`연결 계좌 ${accounts.length}개`);
-  setText("fundTotalIncome",fundMoney(income));
-  setText("fundIncomeCount",`${incomeCount}건`);
-  setText("fundTotalExpense",fundMoney(expense));
-  setText("fundExpenseCount",`${expenseCount}건`);
-  setText("fundUnclassifiedCount",`${unclassified.length}건`);
-  setText("fundUnclassifiedAmount",fundMoney(unclassifiedAmount));
-  setText("fundSourceStatus",fundState.source||"ECOUNT 연동 준비");
-  setText("fundSyncTime",fundState.syncedAt ? `최종수집 ${fundState.syncedAt}` : "실데이터 연결 전");
-
-  const max=Math.max(income,expense,1);
-  const incomeBar=document.getElementById("fundIncomeBar");
-  const expenseBar=document.getElementById("fundExpenseBar");
-  if(incomeBar)incomeBar.style.width=`${Math.round(income/max*100)}%`;
-  if(expenseBar)expenseBar.style.width=`${Math.round(expense/max*100)}%`;
-  setText("fundIncomeBarText",fundMoney(income));
-  setText("fundExpenseBarText",fundMoney(expense));
-
-  renderFundAccounts();
-  renderFundAccountFilter();
-  renderFundTransactions(txs);
+  const accounts=fundState.accounts||[], txs=fundState.filtered||[];
+  const totalBalance=accounts.reduce((s,a)=>s+fundNumber(a.balance),0);
+  const income=txs.filter(t=>t.type==="입금").reduce((s,t)=>s+fundNumber(t.amount),0);
+  const expense=txs.filter(t=>t.type==="출금").reduce((s,t)=>s+fundNumber(t.amount),0);
+  const unclassified=txs.filter(t=>!t.category||t.category==="미분류");
+  setText("fundTotalBalance",fundMoney(totalBalance)); setText("fundAccountCount",`연결 계좌 ${accounts.length}개`);
+  setText("fundTotalIncome",fundMoney(income)); setText("fundIncomeCount",`${txs.filter(t=>t.type==="입금").length}건`);
+  setText("fundTotalExpense",fundMoney(expense)); setText("fundExpenseCount",`${txs.filter(t=>t.type==="출금").length}건`);
+  setText("fundUnclassifiedCount",`${unclassified.length}건`); setText("fundUnclassifiedAmount",fundMoney(unclassified.reduce((s,t)=>s+fundNumber(t.amount),0)));
+  setText("fundSourceStatus","ECOUNT 자동연동 정상");
+  setText("fundSyncTime",fundState.syncedAt?`최종수집 ${fundFormatDateTime(fundState.syncedAt)}`:"금융거래원장 연결됨");
+  const max=Math.max(income,expense,1), ib=document.getElementById("fundIncomeBar"), eb=document.getElementById("fundExpenseBar");
+  if(ib)ib.style.width=`${Math.round(income/max*100)}%`; if(eb)eb.style.width=`${Math.round(expense/max*100)}%`;
+  setText("fundIncomeBarText",fundMoney(income)); setText("fundExpenseBarText",fundMoney(expense));
+  renderFundAccounts(); renderFundAccountFilter(); renderFundTransactions(txs);
 }
 
-function setText(id,value){
-  const el=document.getElementById(id);
-  if(el)el.textContent=value;
-}
+function setText(id,value){ const el=document.getElementById(id); if(el)el.textContent=value; }
 
 function renderFundAccounts(){
-  const wrap=document.getElementById("fundAccountList");
-  if(!wrap)return;
-
-  if(!fundState.accounts.length){
-    wrap.innerHTML=`
-      <div class="fund-empty">
-        <strong>연결된 계좌 데이터가 없습니다.</strong>
-        <span>ECOUNT 연동부가 연결되면 은행·계좌명·잔액·수집상태가 표시됩니다.</span>
-      </div>`;
-    return;
-  }
-
-  wrap.innerHTML=fundState.accounts.map(a=>`
-    <div class="fund-account-item">
-      <div class="fund-bank-icon">🏦</div>
-      <div class="fund-account-main">
-        <strong>${escapeHtml(a.bank||"-")} · ${escapeHtml(a.name||"-")}</strong>
-        <small>${escapeHtml(a.maskedNumber||a.number||"-")}</small>
-      </div>
-      <div class="fund-account-balance">
-        <strong>${fundMoney(a.balance)}</strong>
-        <small class="${a.status==="정상"?"ok":""}">${escapeHtml(a.status||"")}</small>
-      </div>
-    </div>`).join("");
+  const wrap=document.getElementById("fundAccountList"); if(!wrap)return;
+  if(!fundState.accounts.length){ wrap.innerHTML='<div class="fund-empty"><strong>연결된 계좌 데이터가 없습니다.</strong><span>ECOUNT 수집기를 실행하면 자동 반영됩니다.</span></div>'; return; }
+  wrap.innerHTML=fundState.accounts.map(a=>`<div class="fund-account-item"><div class="fund-bank-icon">🏦</div><div class="fund-account-main"><strong>${escapeHtml(a.bank||"-")} · ${escapeHtml(a.name||"-")}</strong><small>${escapeHtml(a.maskedNumber||a.number||"-")}</small></div><div class="fund-account-balance"><strong>${fundMoney(a.balance)}</strong><small class="${a.status==="정상"?"ok":""}">${escapeHtml(a.status||"")}</small></div></div>`).join("");
 }
 
 function renderFundAccountFilter(){
-  const select=document.getElementById("fundAccountFilter");
-  if(!select)return;
-  const current=select.value;
-  select.innerHTML='<option value="">전체 계좌</option>'+
-    fundState.accounts.map(a=>{
-      const key=a.id||a.number||a.name||"";
-      return `<option value="${escapeHtml(key)}">${escapeHtml((a.bank||"")+" "+(a.name||""))}</option>`;
-    }).join("");
-  select.value=current;
+  const select=document.getElementById("fundAccountFilter"); if(!select)return; const current=select.value;
+  select.innerHTML='<option value="">전체 계좌</option>'+fundState.accounts.map(a=>{const key=a.id||a.number||a.name||"";return `<option value="${escapeHtml(key)}">${escapeHtml((a.bank||"")+" "+(a.name||""))}</option>`;}).join(""); select.value=current;
 }
 
 function renderFundTransactions(txs){
-  const body=document.getElementById("fundTransactionBody");
-  if(!body)return;
-
-  if(!txs.length){
-    body.innerHTML=`
-      <tr class="fund-empty-row">
-        <td colspan="10">
-          <strong>조회된 거래가 없습니다.</strong>
-          <span>ECOUNT 실데이터 연결 후 거래내역이 이곳에 표시됩니다.</span>
-        </td>
-      </tr>`;
-    return;
-  }
-
+  const body=document.getElementById("fundTransactionBody"); if(!body)return;
+  if(!txs.length){ body.innerHTML='<tr class="fund-empty-row"><td colspan="10"><strong>조회된 거래가 없습니다.</strong><span>조회조건을 변경해 주세요.</span></td></tr>'; return; }
   body.innerHTML=txs.map((t,idx)=>{
-    const income=t.type==="입금";
-    const category=t.category||"미분류";
-    const store=t.store||"미지정";
-    const status=category==="미분류"?"미분류":"분류완료";
-    return `
-      <tr>
-        <td>${escapeHtml(t.datetime||t.date||"-")}</td>
-        <td><span class="fund-type ${income?"in":"out"}">${escapeHtml(t.type||"-")}</span></td>
-        <td><strong>${escapeHtml(t.accountName||"-")}</strong></td>
-        <td>${escapeHtml(t.description||t.counterparty||"-")}</td>
-        <td class="money in">${income?fundMoney(t.amount):"-"}</td>
-        <td class="money out">${!income?fundMoney(t.amount):"-"}</td>
-        <td class="money">${fundMoney(t.balance)}</td>
-        <td>
-          <select class="fund-inline-select" onchange="updateFundTransaction(${idx},'category',this.value)">
-            ${["미분류","매출입금","식재료 매입","급여","4대보험","세금","임대료","수수료","공과금","법인카드","기타"].map(v=>`<option ${v===category?"selected":""}>${v}</option>`).join("")}
-          </select>
-        </td>
-        <td>
-          <select class="fund-inline-select" onchange="updateFundTransaction(${idx},'store',this.value)">
-            ${FUND_STORE_OPTIONS.map(v=>`<option ${v===store?"selected":""}>${v}</option>`).join("")}
-          </select>
-        </td>
-        <td><span class="fund-status ${status==="분류완료"?"done":"pending"}">${status}</span></td>
-      </tr>`;
+    const income=t.type==="입금", category=t.category||"미분류", store=t.store||"미지정", status=category==="미분류"?"미분류":"분류완료";
+    return `<tr><td>${escapeHtml(fundFormatDateTime(t.datetime||t.date))}</td><td><span class="fund-type ${income?"in":"out"}">${escapeHtml(t.type||"-")}</span></td><td><strong>${escapeHtml(t.accountName||"-")}</strong></td><td>${escapeHtml(t.description||t.counterparty||"-")}</td><td class="money in">${income?fundMoney(t.amount):"-"}</td><td class="money out">${!income?fundMoney(t.amount):"-"}</td><td class="money">${fundMoney(t.balance)}</td><td><select class="fund-inline-select" onchange="updateFundTransaction(${idx},'category',this.value)">${FUND_CATEGORY_OPTIONS.map(v=>`<option ${v===category?"selected":""}>${v}</option>`).join("")}</select></td><td><select class="fund-inline-select" onchange="updateFundTransaction(${idx},'store',this.value)">${FUND_STORE_OPTIONS.map(v=>`<option ${v===store?"selected":""}>${v}</option>`).join("")}</select></td><td><span class="fund-status ${status==="분류완료"?"done":"pending"}">${status}</span></td></tr>`;
   }).join("");
 }
 
-function updateFundTransaction(index,key,value){
-  const visible=fundState.filtered||fundState.transactions;
-  const target=visible[index];
-  if(!target)return;
-  target[key]=value;
-  renderFundDashboard();
+async function updateFundTransaction(index,key,value){
+  const target=(fundState.filtered||[])[index]; if(!target||!target.sourceKey)return;
+  const old=target[key]; target[key]=value; renderFundDashboard();
+  try{
+    const result=await jsonpFund({action:"updateFundTransaction",sourceKey:target.sourceKey,category:target.category||"미분류",store:target.store||"미지정"});
+    if(!result?.ok) throw new Error(result?.message||"저장 실패");
+  }catch(err){
+    target[key]=old; renderFundDashboard(); alert("분류/귀속 저장에 실패했습니다.\n"+(err.message||err));
+  }
 }
 
 function applyFundFilters(){
-  const start=document.getElementById("fundStartDate")?.value||"";
-  const end=document.getElementById("fundEndDate")?.value||"";
-  const account=document.getElementById("fundAccountFilter")?.value||"";
-  const type=document.getElementById("fundTypeFilter")?.value||"";
-  const cls=document.getElementById("fundClassFilter")?.value||"";
-  const keyword=(document.getElementById("fundKeyword")?.value||"").trim().toLowerCase();
-
-  fundState.filtered=fundState.transactions.filter(t=>{
-    const d=String(t.date||t.datetime||"").slice(0,10).replace(/\//g,"-");
-    const accountKey=String(t.accountId||t.accountNumber||t.accountName||"");
-    const status=(!t.category||t.category==="미분류")?"미분류":"분류완료";
-    const hay=[t.description,t.counterparty,t.accountName,t.category,t.store].join(" ").toLowerCase();
-
-    return (!start||!d||d>=start) &&
-      (!end||!d||d<=end) &&
-      (!account||accountKey===account) &&
-      (!type||t.type===type) &&
-      (!cls||status===cls) &&
-      (!keyword||hay.includes(keyword));
-  });
-
+  const start=document.getElementById("fundStartDate")?.value||"", end=document.getElementById("fundEndDate")?.value||"", account=document.getElementById("fundAccountFilter")?.value||"", type=document.getElementById("fundTypeFilter")?.value||"", cls=document.getElementById("fundClassFilter")?.value||"", keyword=(document.getElementById("fundKeyword")?.value||"").trim().toLowerCase();
+  fundState.filtered=fundState.transactions.filter(t=>{ const d=String(t.date||t.datetime||"").slice(0,10).replace(/\//g,"-"); const accountKey=String(t.accountId||t.accountNumber||t.accountName||""); const status=(!t.category||t.category==="미분류")?"미분류":"분류완료"; const hay=[t.description,t.counterparty,t.accountName,t.category,t.store].join(" ").toLowerCase(); return (!start||!d||d>=start)&&(!end||!d||d<=end)&&(!account||accountKey===account)&&(!type||t.type===type)&&(!cls||status===cls)&&(!keyword||hay.includes(keyword)); });
   renderFundDashboard();
 }
 
 function resetFundFilters(){
-  initFundDateRange();
-  ["fundAccountFilter","fundTypeFilter","fundClassFilter","fundKeyword"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.value="";
-  });
-  fundState.filtered=[...fundState.transactions];
-  renderFundDashboard();
+  ["fundStartDate","fundEndDate"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";}); initFundDateRange();
+  ["fundAccountFilter","fundTypeFilter","fundClassFilter","fundKeyword"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";}); fundState.filtered=[...fundState.transactions]; renderFundDashboard();
 }
 
 function showFundTab(tab,button){
   document.querySelectorAll(".fund-tab").forEach(b=>b.classList.toggle("active",b===button));
-  if(tab==="unclassified"){
-    fundState.filtered=fundState.transactions.filter(t=>!t.category||t.category==="미분류");
-    renderFundDashboard();
-    return;
-  }
-  if(tab==="all"){
-    fundState.filtered=[...fundState.transactions];
-    renderFundDashboard();
-    return;
-  }
-  if(tab==="accounts"){
-    document.querySelector(".fund-account-panel")?.scrollIntoView({behavior:"smooth",block:"start"});
-    return;
-  }
-  if(tab==="daily"){
-    alert("자금일보는 ECOUNT 실데이터 연결 후 일자별 입금·출금·기말잔액을 자동 집계하도록 연결합니다.");
-  }
+  if(tab==="unclassified"){fundState.filtered=fundState.transactions.filter(t=>!t.category||t.category==="미분류");renderFundDashboard();return;}
+  if(tab==="all"){fundState.filtered=[...fundState.transactions];renderFundDashboard();return;}
+  if(tab==="accounts"){document.querySelector(".fund-account-panel")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
+  if(tab==="daily") alert("자금일보는 다음 단계에서 일자별 입금·출금·기말잔액을 자동 집계하도록 연결합니다.");
 }
-
 
 function buildModuleViews(){
   buildFundView();
