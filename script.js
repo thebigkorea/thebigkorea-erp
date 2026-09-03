@@ -443,6 +443,7 @@ function openView(view){
   if(target) target.classList.add("active");
   if(view==="fund" && document.getElementById("fundDashboard")){
     renderFundDashboard();
+    loadFundData();
   }
   const meta=PAGE_META[view]||["ERP",""];
   document.getElementById("pageTitle").textContent=meta[0];
@@ -458,6 +459,76 @@ function openView(view){
    ECOUNT 연동부가 준비되면 setFundData(payload)에
    실제 데이터를 전달하면 그대로 화면에 반영됩니다.
 ========================================= */
+
+const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
+
+let fundLoadingPromise = null;
+
+async function loadFundData(force=false){
+  if(fundLoadingPromise && !force) return fundLoadingPromise;
+
+  const sourceEl=document.getElementById("fundSourceStatus");
+  const timeEl=document.getElementById("fundSyncTime");
+  if(sourceEl) sourceEl.textContent="ECOUNT 금융자료 불러오는 중";
+  if(timeEl) timeEl.textContent="Google Sheet 금융거래원장 조회 중";
+
+  fundLoadingPromise=(async()=>{
+    try{
+      const sep=FUND_API_URL.includes("?")?"&":"?";
+      const url=`${FUND_API_URL}${sep}action=getFundData&_=${Date.now()}`;
+      const res=await fetch(url,{method:"GET",cache:"no-store"});
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json=await res.json();
+
+      if(json && json.success===false){
+        throw new Error(json.message||json.error||"금융자료 조회 실패");
+      }
+
+      // Apps Script 응답 구조가 {data:...}, {payload:...} 또는 직접 payload인 경우 모두 대응
+      const payload=json?.data?.payload || json?.payload || json?.data || json;
+
+      const transactions=Array.isArray(payload?.transactions)
+        ? payload.transactions.map(t=>{
+            const type=String(t.type||"").trim();
+            const amount=fundNumber(t.amount);
+            return {
+              ...t,
+              amount,
+              income:type==="입금" ? (fundNumber(t.income)||amount) : 0,
+              expense:type==="출금" ? (fundNumber(t.expense)||amount) : 0,
+              balance:fundNumber(t.balance)
+            };
+          })
+        : [];
+
+      const accounts=Array.isArray(payload?.accounts)
+        ? payload.accounts.map(a=>({...a,balance:fundNumber(a.balance)}))
+        : [];
+
+      setFundData({
+        source:payload?.source||"ECOUNT",
+        syncedAt:payload?.syncedAt||payload?.meta?.syncedAt||"",
+        accounts,
+        transactions,
+        meta:payload?.meta||{}
+      });
+
+      console.log(`[ERP 금융자료] 계좌 ${accounts.length}개 / 거래 ${transactions.length}건`);
+      return true;
+    }catch(err){
+      console.error("[ERP 금융자료 조회 오류]",err);
+      fundState.source="ECOUNT 연동 오류";
+      if(sourceEl) sourceEl.textContent="ECOUNT 연동 오류";
+      if(timeEl) timeEl.textContent=`조회 실패: ${err.message}`;
+      return false;
+    }finally{
+      fundLoadingPromise=null;
+    }
+  })();
+
+  return fundLoadingPromise;
+}
 
 const FUND_STORE_OPTIONS = ["본사","한국의집","길채정","소바공방","고궁","효종갱","공통","미지정"];
 
@@ -489,8 +560,22 @@ function setFundData(payload){
   payload=payload||{};
   fundState.source=payload.source||"ECOUNT";
   fundState.syncedAt=payload.syncedAt||"";
-  fundState.accounts=Array.isArray(payload.accounts)?payload.accounts:[];
-  fundState.transactions=Array.isArray(payload.transactions)?payload.transactions:[];
+  fundState.accounts=Array.isArray(payload.accounts)
+    ? payload.accounts.map(a=>({...a,balance:fundNumber(a.balance)}))
+    : [];
+  fundState.transactions=Array.isArray(payload.transactions)
+    ? payload.transactions.map(t=>{
+        const type=String(t.type||"").trim();
+        const amount=fundNumber(t.amount);
+        return {
+          ...t,
+          amount,
+          income:type==="입금" ? (fundNumber(t.income)||amount) : 0,
+          expense:type==="출금" ? (fundNumber(t.expense)||amount) : 0,
+          balance:fundNumber(t.balance)
+        };
+      })
+    : [];
   fundState.filtered=[...fundState.transactions];
 
   if(document.getElementById("fundDashboard")){
