@@ -156,6 +156,71 @@ const SYSTEM_LINKS = {
 
 const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
 
+/* 본사 출퇴근 Apps Script를 배포한 뒤 /exec 주소를 아래에 넣으세요. */
+const ATTENDANCE_API_URL =
+  "https://script.google.com/macros/s/AKfycbzRL0MceE5NfdEro8Og1VnjLhTc-pcCXKl0d3hXV8u8A3mNoRBBrTEfGdMtp2ohotWx/exec";
+let attendanceStoreData = [];
+
+async function loadAllStoreAttendance(){
+  const summary=document.getElementById("attendanceRosterSummary");
+  const groups=document.getElementById("attendanceStoreGroups");
+  if(!summary||!groups)return;
+
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(ATTENDANCE_API_URL)){
+    summary.textContent="출퇴근 Apps Script 배포 주소를 script.js에 입력해 주세요.";
+    groups.innerHTML='<div class="attendance-roster-empty">ATTENDANCE_API_URL 설정이 필요합니다.</div>';
+    return;
+  }
+
+  summary.textContent="전 점포 출퇴근 현황을 불러오는 중입니다.";
+  groups.innerHTML='<div class="attendance-roster-empty">출퇴근 명단을 불러오는 중입니다.</div>';
+  try{
+    const response=await fetch(ATTENDANCE_API_URL+"?action=getTodayAllStoreAttendance&t="+Date.now(),{cache:"no-store"});
+    const data=await response.json();
+    if(!data.success)throw new Error(data.message||"출퇴근 조회 실패");
+    attendanceStoreData=Array.isArray(data.stores)?data.stores:[];
+    const total=attendanceStoreData.reduce((sum,store)=>sum+(store.employees||[]).length,0);
+    const working=attendanceStoreData.reduce((sum,store)=>sum+(store.workingCount||0),0);
+    summary.textContent=`오늘 출근 ${total}명 · 근무 중 ${working}명 · 점포별 구분`;
+    buildAttendanceStoreTabs();
+    renderAttendanceStores("all");
+  }catch(error){
+    summary.textContent="출퇴근 시스템 연결을 확인해 주세요.";
+    groups.innerHTML='<div class="attendance-roster-empty">출퇴근 명단을 불러오지 못했습니다.</div>';
+    console.error("전 점포 출퇴근 조회 실패",error);
+  }
+}
+
+function buildAttendanceStoreTabs(){
+  const tabs=document.getElementById("attendanceStoreTabs");
+  if(!tabs)return;
+  tabs.innerHTML=['<button class="attendance-store-tab active" type="button" data-store="all">전체</button>']
+    .concat(attendanceStoreData.map((store,index)=>`<button class="attendance-store-tab" type="button" data-store="${index}">${escapeHtml(store.storeName||"미분류")}</button>`)).join("");
+  tabs.querySelectorAll(".attendance-store-tab").forEach(tab=>tab.addEventListener("click",()=>{
+    tabs.querySelectorAll(".attendance-store-tab").forEach(item=>item.classList.toggle("active",item===tab));
+    renderAttendanceStores(tab.dataset.store);
+  }));
+}
+
+function renderAttendanceStores(filter){
+  const target=document.getElementById("attendanceStoreGroups");
+  if(!target)return;
+  const stores=filter==="all"?attendanceStoreData:[attendanceStoreData[Number(filter)]].filter(Boolean);
+  if(!stores.length){
+    target.innerHTML='<div class="attendance-roster-empty">오늘 출근한 직원이 없습니다.</div>';
+    return;
+  }
+  target.innerHTML=stores.map(store=>{
+    const employees=Array.isArray(store.employees)?store.employees:[];
+    const people=employees.length?employees.map(person=>{
+      const completed=person.status==="퇴근 완료";
+      const times=`출근 ${escapeHtml(person.checkIn||"-")} · 퇴근 ${escapeHtml(person.checkOut||"-")}`;
+      return `<div class="attendance-person"><div><strong>${escapeHtml(person.name||"-")}</strong><small>${times}</small></div><span class="attendance-state ${completed?"completed":"working"}">${completed?"퇴근 완료":"근무 중"}</span></div>`;
+    }).join(""):'<div class="attendance-roster-empty">오늘 출근한 직원이 없습니다.</div>';
+    return `<section class="attendance-store-group"><div class="attendance-store-title"><strong>${escapeHtml(store.storeName||"미분류")}</strong><span>${employees.length}명</span></div><div class="attendance-person-list">${people}</div></section>`;
+  }).join("");
+}
+
 /* =========================================
    ERP 홈 전 점포 매출 비교
    실제 영업실적 API 연결 시 아래 함수에 데이터를 전달하면 됩니다.
@@ -482,6 +547,7 @@ function init(){
   renderHqTaskView();
   updateHomeHqTaskSummary();
   loadFundData();
+  loadAllStoreAttendance();
 }
 
 function openView(view){
