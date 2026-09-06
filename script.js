@@ -316,6 +316,7 @@ function setSalesDashboardData(payload){
       <span class="sales-store-name">${escapeHtml(s.displayName)}</span>
       <strong>${s.found?money(current):"자료 없음"}</strong>
       <small>선택 월 매출</small>
+      <span class="sales-store-yesterday">전일 매출 <strong>${s.found?money(s.yesterdaySales||0):"-"}</strong></span>
       <span class="sales-store-change">전년 동기간 ${s.found?comparison:'<span class="sales-change same">-</span>'}</span>
       <b>영업실적 대시보드 열기 →</b>
     </button>`;
