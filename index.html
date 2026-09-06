@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
   <div class="app-shell">
@@ -193,17 +193,23 @@
               <div class="panel-head">
                 <div>
                   <h3>더큰코리아 영업실적 대시보드</h3>
-                  <p>전 점포 매출·전년비·월별 실적은 기존 영업실적 대시보드에서 통합 조회합니다.</p>
+                  <p id="salesComparisonGuide">직영점 4개의 선택 월 실적과 더큰코리아 핵심 지표입니다.</p>
                 </div>
                 <div class="panel-actions">
-                  <span class="sales-linked-badge live">연결 완료</span>
+                  <span class="sales-linked-badge" id="salesDataStatus">매출 데이터 불러오는 중</span>
                   <button class="text-btn" onclick="handleQuickSystem('sales')">영업실적 대시보드 열기</button>
                 </div>
               </div>
 
-              <div class="note-box">
-                ERP에서는 별도 매출 집계를 중복 생성하지 않고,
-                기존 더큰코리아 영업실적 대시보드를 공통으로 사용합니다.
+              <div class="sales-company-summary" aria-label="더큰코리아 핵심 매출 지표">
+                <div class="sales-company-card"><span>선택 월 직영점 합계</span><strong id="salesSelectedMonth">-</strong><small id="salesCurrentPeriod">조회 중</small></div>
+                <div class="sales-company-card"><span>전월 동기간 대비</span><strong id="salesPreviousComparison">-</strong><small id="salesPrevPeriod">비교 중</small></div>
+                <div class="sales-company-card"><span>전년 동기간 대비</span><strong id="salesYearComparison">-</strong><small id="salesYearPeriod">비교 중</small></div>
+                <div class="sales-company-card"><span>전일 매출</span><strong id="salesYesterday">-</strong><small id="salesYesterdayDate">어제 실적</small></div>
+              </div>
+
+              <div class="sales-store-summary-grid" id="salesStoreSummary" aria-live="polite">
+                <div class="sales-store-loading">직영점 4개 실적을 불러오는 중입니다.</div>
               </div>
             </section>
 
@@ -259,6 +265,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>

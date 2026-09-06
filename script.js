@@ -139,7 +139,7 @@ const MODULES = {
   ],
   analysis:[
     ["점포 비교","매출·인건비율·원가율·영업이익 비교","준비중",null],
-    ["월간 경영보고","기존 더큰코리아 영업실적 대시보드","경영보고","https://script.google.com/macros/s/AKfycbzX4BEypYJv6h-5FZBTCFx1iJfHk-3DPBIHO9yRJfUmdXyy6xATo7vGnjG_T1swabh7XQ/exec"],
+    ["영업실적 대시보드","더큰코리아 통합 영업실적 대시보드","대시보드 열기","https://script.google.com/macros/s/AKfycbzX4BEypYJv6h-5FZBTCFx1iJfHk-3DPBIHO9yRJfUmdXyy6xATo7vGnjG_T1swabh7XQ/exec"],
     ["추세 분석","전월·전년동월 주요 지표 추이","준비중",null]
   ]
 };
@@ -293,56 +293,46 @@ function changeHtml(current, compare){
 
 function setSalesDashboardData(payload){
   payload=payload||{};
-  const stores=Array.isArray(payload.stores)?payload.stores:[];
+  const allStores=Array.isArray(payload.stores)?payload.stores:[];
+  const wanted=[
+    {label:"한국의집",keys:["한국의집"]},
+    {label:"평촌 소바공방",keys:["평촌소바공방","소바공방평촌","소바공방"]},
+    {label:"압구정 길채정",keys:["압구정길채정","길채정압구정","길채정"]},
+    {label:"효종갱 파주점",keys:["효종갱파주점","효종갱파주","효종갱"]}
+  ];
+  const normalize=v=>String(v||"").replace(/\s|·|\.|-/g,"").toLowerCase();
+  const stores=wanted.map(item=>{
+    const found=allStores.find(s=>item.keys.some(key=>normalize(s.name).includes(normalize(key))));
+    return {...(found||{}),displayName:item.label,found:Boolean(found)};
+  });
+  const container=document.getElementById("salesStoreSummary");
+  if(!container)return;
 
-  const body=document.getElementById("allStoreSalesBody");
-  if(!body)return;
-
-  if(!stores.length){
-    body.innerHTML=`
-      <tr class="sales-loading-row">
-        <td colspan="7">현재 조회할 매출 데이터가 없습니다.</td>
-      </tr>`;
-    document.getElementById("salesDataStatus").textContent="매출 데이터 없음";
-    return;
-  }
-
-  body.innerHTML=stores.map(s=>{
-    const current=numberOrZero(s.current);
-    const prev=numberOrZero(s.previousPeriod);
-    const year=numberOrZero(s.previousYearPeriod);
-    const type=String(s.operationType||"").trim()||"미분류";
-    const cls=type==="직영"?"direct":"consignment";
-
-    return `
-      <tr>
-        <td><strong>${escapeHtml(s.name||"-")}</strong></td>
-        <td><span class="type ${cls}">${escapeHtml(type)}</span></td>
-        <td>${money(current)}</td>
-        <td>${money(prev)}</td>
-        <td>${changeHtml(current,prev)}</td>
-        <td>${money(year)}</td>
-        <td>${changeHtml(current,year)}</td>
-      </tr>`;
+  container.innerHTML=stores.map(s=>{
+    const current=numberOrZero(s.current ?? s.monthSales ?? s.selectedMonthSales);
+    const compare=numberOrZero(s.previousYearPeriod ?? s.previousPeriod ?? s.previousYearSales);
+    const comparison=compare ? changeHtml(current,compare) : '<span class="sales-change same">비교자료 없음</span>';
+    return `<button class="sales-store-card" type="button" onclick="handleQuickSystem('sales')">
+      <span class="sales-store-name">${escapeHtml(s.displayName)}</span>
+      <strong>${s.found?money(current):"자료 없음"}</strong>
+      <small>선택 월 매출</small>
+      <span class="sales-store-change">전년 동기간 ${s.found?comparison:'<span class="sales-change same">-</span>'}</span>
+      <b>영업실적 대시보드 열기 →</b>
+    </button>`;
   }).join("");
 
-  const totalCurrent=stores.reduce((a,s)=>a+numberOrZero(s.current),0);
-  const totalPrev=stores.reduce((a,s)=>a+numberOrZero(s.previousPeriod),0);
-  const totalYear=stores.reduce((a,s)=>a+numberOrZero(s.previousYearPeriod),0);
+  const available=stores.filter(s=>s.found);
+  const totalCurrent=available.reduce((a,s)=>a+numberOrZero(s.current ?? s.monthSales ?? s.selectedMonthSales),0);
+  const totalPrevious=available.reduce((a,s)=>a+numberOrZero(s.previousPeriod ?? s.previousMonthSales),0);
+  const totalYear=available.reduce((a,s)=>a+numberOrZero(s.previousYearPeriod ?? s.previousYearSales),0);
 
-  document.getElementById("salesTotalCurrent").textContent=money(totalCurrent);
-  document.getElementById("salesVsPrev").innerHTML=changeHtml(totalCurrent,totalPrev);
-  document.getElementById("salesVsYear").innerHTML=changeHtml(totalCurrent,totalYear);
+  document.getElementById("salesSelectedMonth").textContent=money(payload.selectedMonthSales ?? payload.totalCurrent ?? totalCurrent);
+  document.getElementById("salesPreviousComparison").innerHTML=totalPrevious?changeHtml(totalCurrent,totalPrevious):'<span class="sales-change same">비교자료 없음</span>';
+  document.getElementById("salesYearComparison").innerHTML=totalYear?changeHtml(totalCurrent,totalYear):'<span class="sales-change same">비교자료 없음</span>';
   document.getElementById("salesYesterday").textContent=money(payload.yesterdaySales||0);
 
-  document.getElementById("salesFootCurrent").textContent=money(totalCurrent);
-  document.getElementById("salesFootPrev").textContent=money(totalPrev);
-  document.getElementById("salesFootPrevRate").innerHTML=changeHtml(totalCurrent,totalPrev);
-  document.getElementById("salesFootYear").textContent=money(totalYear);
-  document.getElementById("salesFootYearRate").innerHTML=changeHtml(totalCurrent,totalYear);
-
   const status=document.getElementById("salesDataStatus");
-  status.textContent=`전 점포 ${stores.length}개 연동`;
+  status.textContent=`직영점 ${available.length}/4 연동`;
   status.classList.add("live");
 
   updateSalesPeriodLabels(payload.asOfDate);
@@ -400,17 +390,9 @@ function loadErpStoreSales(){
       status.classList.remove("live");
     }
 
-    const body=
-      document.getElementById("allStoreSalesBody");
-
-    if(body){
-      body.innerHTML=`
-        <tr class="sales-loading-row">
-          <td colspan="7">
-            영업실적 데이터를 불러오지 못했습니다.
-            Apps Script 배포 상태를 확인해 주세요.
-          </td>
-        </tr>`;
+    const container=document.getElementById("salesStoreSummary");
+    if(container){
+      container.innerHTML='<div class="sales-store-loading error">영업실적 데이터를 불러오지 못했습니다. 대시보드 연결 상태를 확인해 주세요.</div>';
     }
   },30000);
 
@@ -445,14 +427,9 @@ function loadErpStoreSales(){
         payload?.message ||
         "매출 데이터를 조회하지 못했습니다.";
 
-      const body=
-        document.getElementById("allStoreSalesBody");
-
-      if(body){
-        body.innerHTML=`
-          <tr class="sales-loading-row">
-            <td colspan="7">${escapeHtml(message)}</td>
-          </tr>`;
+      const container=document.getElementById("salesStoreSummary");
+      if(container){
+        container.innerHTML=`<div class="sales-store-loading error">${escapeHtml(message)}</div>`;
       }
     }
 
@@ -541,6 +518,7 @@ function init(){
 
   month.addEventListener("change",()=>{
     updateSalesPeriodLabels();
+    loadErpStoreSales();
   });
 
   document.querySelectorAll(".nav-item").forEach(btn=>{
@@ -573,6 +551,7 @@ function init(){
   updateHomeHqTaskSummary();
   loadFundData();
   loadAllStoreAttendance();
+  loadErpStoreSales();
 }
 
 function openView(view){

@@ -197,11 +197,46 @@ button{cursor:pointer}
 .sales-change.down{color:#c34a4a}
 .sales-change.same{color:#788596}
 .type.consignment{background:#fff1dd;color:#9a6518}
+.sales-company-summary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.sales-company-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#f8fafc;
+  padding:14px;
+  min-width:0;
+}
+.sales-company-card span,.sales-company-card small{display:block;color:var(--muted);font-size:10px;font-weight:800}
+.sales-company-card strong{display:block;margin:8px 0 5px;font-size:18px;line-height:1.25;word-break:keep-all}
+.sales-store-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.sales-store-card{
+  appearance:none;text-align:left;font:inherit;color:inherit;background:#fff;
+  border:1px solid var(--line);border-radius:14px;padding:15px;min-height:150px;
+  cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;
+}
+.sales-store-card:hover,.sales-store-card:focus-visible{transform:translateY(-2px);border-color:#b98a3d;box-shadow:0 8px 20px rgba(31,45,61,.09);outline:none}
+.sales-store-name{display:block;color:#44515f;font-size:11px;font-weight:900}
+.sales-store-card>strong{display:block;margin:10px 0 4px;font-size:20px}
+.sales-store-card>small{display:block;color:var(--muted);font-size:10px}
+.sales-store-change{display:block;margin-top:10px;font-size:10px;color:var(--muted)}
+.sales-store-card>b{display:block;margin-top:11px;color:#2458a6;font-size:10px}
+.sales-store-card .sales-change{justify-content:flex-start;min-width:0;margin-left:3px}
+.sales-store-loading{grid-column:1/-1;padding:35px 14px;text-align:center;color:#8793a0;border:1px dashed var(--line);border-radius:14px}
+.sales-store-loading.error{color:#b54848;background:#fff8f8}
 @media(max-width:1200px){
-  .sales-summary-grid{grid-template-columns:repeat(2,1fr)}
+  .sales-summary-grid,.sales-company-summary,.sales-store-summary-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:560px){
-  .sales-summary-grid{grid-template-columns:1fr}
+  .sales-summary-grid,.sales-company-summary,.sales-store-summary-grid{grid-template-columns:1fr}
   .panel-actions{align-items:flex-end;flex-direction:column;gap:5px}
 }
 
