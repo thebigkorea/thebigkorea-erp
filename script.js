@@ -326,11 +326,13 @@ function setSalesDashboardData(payload){
   const totalCurrent=available.reduce((a,s)=>a+numberOrZero(s.current ?? s.monthSales ?? s.selectedMonthSales),0);
   const totalPrevious=available.reduce((a,s)=>a+numberOrZero(s.previousPeriod ?? s.previousMonthSales),0);
   const totalYear=available.reduce((a,s)=>a+numberOrZero(s.previousYearPeriod ?? s.previousYearSales),0);
+  const totalYearToDate=numberOrZero(payload.totals?.yearToDate) || available.reduce((a,s)=>a+numberOrZero(s.yearToDate),0);
 
   document.getElementById("salesSelectedMonth").textContent=money(payload.selectedMonthSales ?? payload.totalCurrent ?? totalCurrent);
-  document.getElementById("salesPreviousComparison").innerHTML=totalPrevious?changeHtml(totalCurrent,totalPrevious):'<span class="sales-change same">비교자료 없음</span>';
   document.getElementById("salesYearComparison").innerHTML=totalYear?changeHtml(totalCurrent,totalYear):'<span class="sales-change same">비교자료 없음</span>';
   document.getElementById("salesYesterday").textContent=money(payload.yesterdaySales||0);
+  document.getElementById("salesYearToDate").textContent=money(totalYearToDate);
+  document.getElementById("salesYearTotalLabel").textContent=`직영점 ${payload.year||new Date().getFullYear()}년 매출 합계`;
 
   const status=document.getElementById("salesDataStatus");
   status.textContent=`직영점 ${available.length}/4 연동`;
@@ -492,7 +494,7 @@ function updateSalesPeriodLabels(asOfDate){
   if(prevPeriodEl) prevPeriodEl.textContent=prevLabel+" 대비";
   if(yearPeriodEl) yearPeriodEl.textContent=yearLabel+" 대비";
   if(comparisonGuideEl){
-    comparisonGuideEl.textContent=`${currentLabel} 누계를 전월·전년 동기간과 비교합니다.`;
+    comparisonGuideEl.textContent="이 화면은 직영점 4개만 표시합니다. 전체 점포 실적은 ‘영업실적 대시보드 열기’를 눌러 조회하세요.";
   }
 
   if(yesterdayDateEl){

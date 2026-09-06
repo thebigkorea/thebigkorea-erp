@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
   <div class="app-shell">
@@ -193,7 +193,7 @@
               <div class="panel-head">
                 <div>
                   <h3>더큰코리아 영업실적 대시보드</h3>
-                  <p id="salesComparisonGuide">직영점 4개의 선택 월 실적과 더큰코리아 핵심 지표입니다.</p>
+                  <p id="salesComparisonGuide">이 화면은 직영점 4개만 표시합니다. 전체 점포 실적은 ‘영업실적 대시보드 열기’를 눌러 조회하세요.</p>
                 </div>
                 <div class="panel-actions">
                   <span class="sales-linked-badge" id="salesDataStatus">매출 데이터 불러오는 중</span>
@@ -203,9 +203,9 @@
 
               <div class="sales-company-summary" aria-label="더큰코리아 핵심 매출 지표">
                 <div class="sales-company-card"><span>선택 월 직영점 합계</span><strong id="salesSelectedMonth">-</strong><small id="salesCurrentPeriod">조회 중</small></div>
-                <div class="sales-company-card"><span>전월 동기간 대비</span><strong id="salesPreviousComparison">-</strong><small id="salesPrevPeriod">비교 중</small></div>
                 <div class="sales-company-card"><span>전년 동기간 대비</span><strong id="salesYearComparison">-</strong><small id="salesYearPeriod">비교 중</small></div>
-                <div class="sales-company-card"><span>전일 매출</span><strong id="salesYesterday">-</strong><small id="salesYesterdayDate">어제 실적</small></div>
+                <div class="sales-company-card"><span>전일 직영점 매출 합계</span><strong id="salesYesterday">-</strong><small id="salesYesterdayDate">어제 실적</small></div>
+                <div class="sales-company-card"><span id="salesYearTotalLabel">직영점 연 매출 합계</span><strong id="salesYearToDate">-</strong><small>1월부터 선택 월까지 누계</small></div>
               </div>
 
               <div class="sales-store-summary-grid" id="salesStoreSummary" aria-live="polite">
@@ -265,6 +265,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=15"></script>
 </body>
 </html>
