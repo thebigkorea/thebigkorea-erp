@@ -85,6 +85,12 @@ button{cursor:pointer}
 .attendance-state{font-size:9px;font-weight:900;border-radius:999px;padding:5px 8px;white-space:nowrap}
 .attendance-state.working{background:#e7f5ee;color:#16734a}.attendance-state.completed{background:#eef2f6;color:#5f6d7c}
 .attendance-roster-empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:11px;border:1px dashed var(--line);border-radius:12px}
+.attendance-all-summary{display:grid;gap:8px}
+.attendance-summary-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:13px;text-align:left;color:var(--text)}
+.attendance-summary-row:hover{border-color:#b8c5d2;background:#f8fafc}
+.attendance-summary-row span,.attendance-summary-row strong,.attendance-summary-row small{display:block;min-width:0}
+.attendance-summary-row strong{font-size:12px}.attendance-summary-row small{margin-top:6px;color:var(--muted);font-size:10px;line-height:1.45;white-space:normal;word-break:keep-all}
+.attendance-summary-row b{font-size:11px;color:var(--blue);white-space:nowrap}
 .store-table-wrap{overflow:auto}.store-table{width:100%;border-collapse:collapse;min-width:760px}.store-table th{font-size:10px;color:#7a8795;background:#f7f9fb;text-align:left;padding:10px;border-bottom:1px solid var(--line)}.store-table td{padding:11px 10px;border-bottom:1px solid #edf0f3;font-size:11px}
 .type,.state{display:inline-block;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900}.type.direct{background:#e8f1ff;color:#2e61ad}.state.good{background:#e7f5ee;color:#16734a}
 .roadmap{display:grid;gap:10px}.roadmap-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:11px}.roadmap-item>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#e9edf2;color:#647180;font-weight:900;font-size:11px}.roadmap-item strong,.roadmap-item small{display:block}.roadmap-item strong{font-size:11px}.roadmap-item small{font-size:10px;color:var(--muted);margin-top:3px}.roadmap-item.done>span{background:#dff3e9;color:#11734a}.roadmap-item.current{border-color:#d7c4a5;background:#fffaf2}.roadmap-item.current>span{background:#b58a52;color:#fff}

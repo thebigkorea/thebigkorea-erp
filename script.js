@@ -218,6 +218,23 @@ function renderAttendanceStores(filter){
     target.innerHTML='<div class="attendance-roster-empty">오늘 출근한 직원이 없습니다.</div>';
     return;
   }
+  if(filter==="all"){
+    target.innerHTML=`<div class="attendance-all-summary">${stores.map((store,index)=>{
+      const employees=Array.isArray(store.employees)?store.employees:[];
+      let names="오늘 출근한 직원이 없습니다.";
+      if(store.connectionRequired)names="배포 URL 입력 필요";
+      else if(store.connectionError)names="출퇴근 API 연결 확인 필요";
+      else if(employees.length)names=employees.map(person=>escapeHtml(person.name||"-")).join(", ");
+      return `<button class="attendance-summary-row" type="button" data-store-index="${index}"><span><strong>${escapeHtml(store.storeName||"미분류")}</strong><small>${names}</small></span><b>${employees.length}명 ›</b></button>`;
+    }).join("")}</div>`;
+    target.querySelectorAll(".attendance-summary-row").forEach(row=>row.addEventListener("click",()=>{
+      const index=row.dataset.storeIndex;
+      const tabs=document.getElementById("attendanceStoreTabs");
+      tabs?.querySelectorAll(".attendance-store-tab").forEach(tab=>tab.classList.toggle("active",tab.dataset.store===index));
+      renderAttendanceStores(index);
+    }));
+    return;
+  }
   target.innerHTML=stores.map(store=>{
     const employees=Array.isArray(store.employees)?store.employees:[];
     const people=store.connectionRequired?'<div class="attendance-roster-empty">이 점포의 배포 URL을 입력해 주세요.</div>':store.connectionError?'<div class="attendance-roster-empty">이 점포의 출퇴근 API 연결을 확인해 주세요.</div>':employees.length?employees.map(person=>{
