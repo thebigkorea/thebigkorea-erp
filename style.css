@@ -227,8 +227,9 @@ button{cursor:pointer}
 .sales-store-name{display:block;color:#44515f;font-size:11px;font-weight:900}
 .sales-store-card>strong{display:block;margin:10px 0 4px;font-size:20px}
 .sales-store-card>small{display:block;color:var(--muted);font-size:10px}
-.sales-store-yesterday{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:7px 8px;border-radius:8px;background:#f5f8fb;color:#526170;font-size:10px}
-.sales-store-yesterday strong{color:#17243a;font-size:12px;white-space:nowrap}
+.sales-store-yesterday,.sales-store-previous{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:7px 8px;border-radius:8px;background:#f5f8fb;color:#526170;font-size:10px}
+.sales-store-yesterday strong,.sales-store-previous strong{color:#17243a;font-size:12px;white-space:nowrap}
+.sales-company-card small b,.sales-company-card small em{font-style:normal}
 .sales-store-change{display:block;margin-top:10px;font-size:10px;color:var(--muted)}
 .sales-store-card>b{display:block;margin-top:11px;color:#2458a6;font-size:10px}
 .sales-store-card .sales-change{justify-content:flex-start;min-width:0;margin-left:3px}

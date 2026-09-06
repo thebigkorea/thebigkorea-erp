@@ -317,7 +317,8 @@ function setSalesDashboardData(payload){
       <strong>${s.found?money(current):"자료 없음"}</strong>
       <small>선택 월 매출</small>
       <span class="sales-store-yesterday">전일 매출 <strong>${s.found?money(s.yesterdaySales||0):"-"}</strong></span>
-      <span class="sales-store-change">전년 동기간 ${s.found?comparison:'<span class="sales-change same">-</span>'}</span>
+      <span class="sales-store-previous">전년 동기간 매출 <strong>${s.found?money(compare):"-"}</strong></span>
+      <span class="sales-store-change">전년도 대비 ${s.found?comparison:'<span class="sales-change same">-</span>'}</span>
       <b>영업실적 대시보드 열기 →</b>
     </button>`;
   }).join("");
@@ -327,12 +328,16 @@ function setSalesDashboardData(payload){
   const totalPrevious=available.reduce((a,s)=>a+numberOrZero(s.previousPeriod ?? s.previousMonthSales),0);
   const totalYear=available.reduce((a,s)=>a+numberOrZero(s.previousYearPeriod ?? s.previousYearSales),0);
   const totalYearToDate=numberOrZero(payload.totals?.yearToDate) || available.reduce((a,s)=>a+numberOrZero(s.yearToDate),0);
+  const allStoreYearToDate=numberOrZero(payload.totals?.allStoreYearToDate);
 
   document.getElementById("salesSelectedMonth").textContent=money(payload.selectedMonthSales ?? payload.totalCurrent ?? totalCurrent);
+  document.getElementById("salesPreviousYearAmount").textContent=money(totalYear);
   document.getElementById("salesYearComparison").innerHTML=totalYear?changeHtml(totalCurrent,totalYear):'<span class="sales-change same">비교자료 없음</span>';
-  document.getElementById("salesYesterday").textContent=money(payload.yesterdaySales||0);
   document.getElementById("salesYearToDate").textContent=money(totalYearToDate);
   document.getElementById("salesYearTotalLabel").textContent=`직영점 ${payload.year||new Date().getFullYear()}년 매출 합계`;
+  document.getElementById("salesAllStoreYearToDate").textContent=allStoreYearToDate?money(allStoreYearToDate):"캐시 확인 필요";
+  document.getElementById("salesAllStoreYearTotalLabel").textContent=`${payload.year||new Date().getFullYear()}년 더큰코리아 전 점포 매출 합계`;
+  document.getElementById("salesAllStoreYearNote").textContent=payload.totals?.allStoreCount?`1월부터 선택 월까지 · ${payload.totals.allStoreCount}개 점포`:"경영대시보드 캐시 기준";
 
   const status=document.getElementById("salesDataStatus");
   status.textContent=`직영점 ${available.length}/4 연동`;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
   <div class="app-shell">
@@ -203,9 +203,9 @@
 
               <div class="sales-company-summary" aria-label="더큰코리아 핵심 매출 지표">
                 <div class="sales-company-card"><span>선택 월 직영점 합계</span><strong id="salesSelectedMonth">-</strong><small id="salesCurrentPeriod">조회 중</small></div>
-                <div class="sales-company-card"><span>전년 동기간 대비</span><strong id="salesYearComparison">-</strong><small id="salesYearPeriod">비교 중</small></div>
-                <div class="sales-company-card"><span>전일 직영점 매출 합계</span><strong id="salesYesterday">-</strong><small id="salesYesterdayDate">어제 실적</small></div>
+                <div class="sales-company-card"><span>전년도 동기간 매출</span><strong id="salesPreviousYearAmount">-</strong><small><b id="salesYearComparison">-</b> · <em id="salesYearPeriod">비교 중</em></small></div>
                 <div class="sales-company-card"><span id="salesYearTotalLabel">직영점 연 매출 합계</span><strong id="salesYearToDate">-</strong><small>1월부터 선택 월까지 누계</small></div>
+                <div class="sales-company-card"><span id="salesAllStoreYearTotalLabel">더큰코리아 전 점포 연 매출 합계</span><strong id="salesAllStoreYearToDate">-</strong><small id="salesAllStoreYearNote">대시보드 캐시 기준</small></div>
               </div>
 
               <div class="sales-store-summary-grid" id="salesStoreSummary" aria-live="polite">
@@ -265,6 +265,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=15"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>
