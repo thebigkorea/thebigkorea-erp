@@ -156,9 +156,13 @@ const SYSTEM_LINKS = {
 
 const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
 
-/* 본사 출퇴근 Apps Script를 배포한 뒤 /exec 주소를 아래에 넣으세요. */
-const ATTENDANCE_API_URL =
-  "https://script.google.com/macros/s/AKfycbzRL0MceE5NfdEro8Og1VnjLhTc-pcCXKl0d3hXV8u8A3mNoRBBrTEfGdMtp2ohotWx/exec";
+/* 네 출퇴근 Apps Script의 최신 /exec 배포 주소 */
+const ATTENDANCE_STORES = [
+  {name:"더큰코리아 본사",url:"https://script.google.com/macros/s/AKfycbzRL0MceE5NfdEro8Og1VnjLhTc-pcCXKl0d3hXV8u8A3mNoRBBrTEfGdMtp2ohotWx/exec"},
+  {name:"평촌 소바공방",url:"https://script.google.com/macros/s/AKfycbwqe8v-KtP_xn3eJ3keFMJ8a4G0zyfk6Rj5lBFZ8oSoVHm370qQ9xjUpi0bzEPbBxed/exec"},
+  {name:"압구정 길채정",url:"https://script.google.com/macros/s/AKfycbyJuwQdfCgVrlCu6gH6JepEXu8u4pXrWueGimopd7s5U8Jwm4XqQWSfir-mnixu1mywYg/exec"},
+  {name:"효종갱 파주점",url:"https://script.google.com/macros/s/AKfycbwepn9ybkMA6BPSqobW1009eCdxxdbfRv_1yuesYqormK3F1Rr74Rp6m_fN7CKiCud5/exec"}
+];
 let attendanceStoreData = [];
 
 async function loadAllStoreAttendance(){
@@ -166,22 +170,26 @@ async function loadAllStoreAttendance(){
   const groups=document.getElementById("attendanceStoreGroups");
   if(!summary||!groups)return;
 
-  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(ATTENDANCE_API_URL)){
-    summary.textContent="출퇴근 Apps Script 배포 주소를 script.js에 입력해 주세요.";
-    groups.innerHTML='<div class="attendance-roster-empty">ATTENDANCE_API_URL 설정이 필요합니다.</div>';
-    return;
-  }
-
-  summary.textContent="전 점포 출퇴근 현황을 불러오는 중입니다.";
+  summary.textContent="지정된 4개 점포 출퇴근 현황을 불러오는 중입니다.";
   groups.innerHTML='<div class="attendance-roster-empty">출퇴근 명단을 불러오는 중입니다.</div>';
   try{
-    const response=await fetch(ATTENDANCE_API_URL+"?action=getTodayAllStoreAttendance&t="+Date.now(),{cache:"no-store"});
-    const data=await response.json();
-    if(!data.success)throw new Error(data.message||"출퇴근 조회 실패");
-    attendanceStoreData=Array.isArray(data.stores)?data.stores:[];
+    attendanceStoreData=await Promise.all(ATTENDANCE_STORES.map(async store=>{
+      if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(store.url)){
+        return {storeName:store.name,employees:[],connectionRequired:true};
+      }
+      try{
+        const response=await fetch(store.url+"?action=getTodayAttendanceSummary&t="+Date.now(),{cache:"no-store"});
+        const data=await response.json();
+        if(!data.success)throw new Error(data.message||"조회 실패");
+        const employees=Array.isArray(data.employees)?data.employees:[];
+        return {storeName:store.name,employees,workingCount:employees.filter(e=>e.status!=="퇴근 완료").length};
+      }catch(error){
+        return {storeName:store.name,employees:[],connectionError:true};
+      }
+    }));
     const total=attendanceStoreData.reduce((sum,store)=>sum+(store.employees||[]).length,0);
     const working=attendanceStoreData.reduce((sum,store)=>sum+(store.workingCount||0),0);
-    summary.textContent=`오늘 출근 ${total}명 · 근무 중 ${working}명 · 점포별 구분`;
+    summary.textContent=`4개 점포 오늘 출근 ${total}명 · 근무 중 ${working}명`;
     buildAttendanceStoreTabs();
     renderAttendanceStores("all");
   }catch(error){
@@ -212,7 +220,7 @@ function renderAttendanceStores(filter){
   }
   target.innerHTML=stores.map(store=>{
     const employees=Array.isArray(store.employees)?store.employees:[];
-    const people=employees.length?employees.map(person=>{
+    const people=store.connectionRequired?'<div class="attendance-roster-empty">이 점포의 배포 URL을 입력해 주세요.</div>':store.connectionError?'<div class="attendance-roster-empty">이 점포의 출퇴근 API 연결을 확인해 주세요.</div>':employees.length?employees.map(person=>{
       const completed=person.status==="퇴근 완료";
       const times=`출근 ${escapeHtml(person.checkIn||"-")} · 퇴근 ${escapeHtml(person.checkOut||"-")}`;
       return `<div class="attendance-person"><div><strong>${escapeHtml(person.name||"-")}</strong><small>${times}</small></div><span class="attendance-state ${completed?"completed":"working"}">${completed?"퇴근 완료":"근무 중"}</span></div>`;
