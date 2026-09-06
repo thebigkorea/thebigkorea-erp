@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
   <div class="app-shell">
@@ -174,16 +174,16 @@
               </div>
             </section>
 
-            <section class="panel alert-panel">
+            <section class="panel alert-panel attendance-roster-panel">
               <div class="panel-head">
-                <div><h3>관리 알림</h3><p>미처리 업무를 모아서 표시합니다.</p></div>
-                <button class="text-btn">전체보기</button>
+                <div><h3>오늘의 출퇴근자 명부</h3><p id="attendanceRosterSummary">전 점포 출퇴근 현황을 불러오는 중입니다.</p></div>
+                <button class="text-btn" type="button" onclick="loadAllStoreAttendance()">새로고침</button>
               </div>
-              <div class="alert-list">
-                <div class="alert-item"><span class="dot red"></span><div><strong>급여 미확정</strong><small>확정 전 직원 급여가 있습니다.</small></div><b>확인</b></div>
-                <div class="alert-item"><span class="dot amber"></span><div><strong>연월차 승인 대기</strong><small>관리자 승인이 필요한 신청 건입니다.</small></div><b>확인</b></div>
-                <div class="alert-item"><span class="dot blue"></span><div><strong>계약 갱신 예정</strong><small>재계약 대상자를 확인하세요.</small></div><b>확인</b></div>
-                <div class="alert-item"><span class="dot green"></span><div><strong>영업실적 입력</strong><small>점포별 일일 실적 입력 상태를 확인합니다.</small></div><b>확인</b></div>
+              <div class="attendance-store-tabs" id="attendanceStoreTabs" role="tablist" aria-label="출퇴근 매장 선택">
+                <button class="attendance-store-tab active" type="button" data-store="all">전체</button>
+              </div>
+              <div class="attendance-store-groups" id="attendanceStoreGroups" aria-live="polite">
+                <div class="attendance-roster-empty">출퇴근 명단을 불러오는 중입니다.</div>
               </div>
             </section>
           </div>
@@ -245,6 +245,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>
