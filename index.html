@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
   <div class="app-shell">
@@ -176,7 +176,7 @@
 
             <section class="panel alert-panel attendance-roster-panel">
               <div class="panel-head">
-                <div><h3>오늘의 출퇴근자 명부</h3><p id="attendanceRosterSummary">전 점포 출퇴근 현황을 불러오는 중입니다.</p></div>
+                <div><h3>오늘의 출퇴근자 명부</h3><p id="attendanceRosterSummary">지정된 4개 점포 출퇴근 현황을 불러오는 중입니다.</p></div>
                 <button class="text-btn" type="button" onclick="loadAllStoreAttendance()">새로고침</button>
               </div>
               <div class="attendance-store-tabs" id="attendanceStoreTabs" role="tablist" aria-label="출퇴근 매장 선택">
@@ -207,18 +207,32 @@
               </div>
             </section>
 
-            <section class="panel">
+            <section class="panel alert-panel">
               <div class="panel-head">
-                <div><h3>ERP 구축 단계</h3><p>기존 시스템을 순차적으로 연결합니다.</p></div>
+                <div><h3>관리 알림</h3><p>미처리 업무를 모아서 표시합니다.</p></div>
+                <button class="text-btn" type="button" onclick="openView('hqtasks')">전체보기</button>
               </div>
-              <div class="roadmap">
-                <div class="roadmap-item done"><span>1</span><div><strong>ERP 홈</strong><small>메뉴 구조 · 통합 대시보드</small></div></div>
-                <div class="roadmap-item current"><span>2</span><div><strong>인사 · 급여 연결</strong><small>기존 시스템 API/링크 통합</small></div></div>
-                <div class="roadmap-item done"><span>3</span><div><strong>점포 · 매출 연결</strong><small>기존 영업실적 대시보드 공통 연결</small></div></div>
-                <div class="roadmap-item"><span>4</span><div><strong>매입 · 자금 · 손익</strong><small>직영점 중심 경영관리</small></div></div>
+              <div class="alert-list">
+                <button class="alert-item" type="button" onclick="openView('hqtasks')"><span class="dot amber"></span><div><strong>오늘 본사 업무 미처리</strong><small>오늘 처리할 업무와 마감 일정을 확인합니다.</small></div><b>확인</b></button>
+                <button class="alert-item" type="button" onclick="handleQuickSystem('payroll')"><span class="dot red"></span><div><strong>급여 미확정</strong><small>확정 전 직원 급여가 있습니다.</small></div><b>확인</b></button>
+                <button class="alert-item" type="button" onclick="handleQuickSystem('leave')"><span class="dot amber"></span><div><strong>연월차 승인 대기</strong><small>관리자 승인이 필요한 신청 건입니다.</small></div><b>확인</b></button>
+                <button class="alert-item" type="button" onclick="handleQuickSystem('contract')"><span class="dot blue"></span><div><strong>계약 갱신 예정</strong><small>재계약 대상자를 확인하세요.</small></div><b>확인</b></button>
+                <button class="alert-item" type="button" onclick="handleQuickSystem('sales')"><span class="dot green"></span><div><strong>영업실적 입력</strong><small>점포별 일일 실적 입력 상태를 확인합니다.</small></div><b>확인</b></button>
               </div>
             </section>
           </div>
+
+          <section class="panel roadmap-panel">
+            <div class="panel-head">
+              <div><h3>ERP 구축 단계</h3><p>기존 시스템을 순차적으로 연결합니다.</p></div>
+            </div>
+            <div class="roadmap roadmap-horizontal">
+              <div class="roadmap-item done"><span>1</span><div><strong>ERP 홈</strong><small>메뉴 구조 · 통합 대시보드</small></div></div>
+              <div class="roadmap-item current"><span>2</span><div><strong>인사 · 급여 연결</strong><small>기존 시스템 API/링크 통합</small></div></div>
+              <div class="roadmap-item done"><span>3</span><div><strong>점포 · 매출 연결</strong><small>기존 영업실적 대시보드 공통 연결</small></div></div>
+              <div class="roadmap-item"><span>4</span><div><strong>매입 · 자금 · 손익</strong><small>직영점 중심 경영관리</small></div></div>
+            </div>
+          </section>
         </section>
 
         <!-- Generic views -->
@@ -245,6 +259,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>

@@ -64,7 +64,8 @@ button{cursor:pointer}
 .quick-card{border:1px solid var(--line);background:#fff;border-radius:13px;padding:14px;text-align:left;min-height:104px;transition:.18s}
 .quick-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(31,45,61,.09);border-color:#cad4df}
 .quick-icon{font-size:22px;display:block;margin-bottom:10px}.quick-card strong{font-size:12px;display:block}.quick-card small{display:block;color:var(--muted);font-size:10px;margin-top:5px}
-.alert-list{display:grid;gap:7px}.alert-item{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:11px}
+.alert-list{display:grid;gap:7px}.alert-item{width:100%;display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff;text-align:left;color:var(--text)}
+.alert-item:hover{border-color:#c9d3de;background:#f9fbfd}
 .alert-item strong,.alert-item small{display:block}.alert-item strong{font-size:11px}.alert-item small{font-size:10px;color:var(--muted);margin-top:4px}.alert-item b{font-size:10px;color:var(--blue)}
 .dot{width:8px;height:8px;border-radius:50%}.dot.red{background:var(--red)}.dot.amber{background:var(--amber)}.dot.blue{background:var(--blue)}.dot.green{background:var(--green)}
 .attendance-roster-panel{min-height:330px}
@@ -85,6 +86,7 @@ button{cursor:pointer}
 .store-table-wrap{overflow:auto}.store-table{width:100%;border-collapse:collapse;min-width:760px}.store-table th{font-size:10px;color:#7a8795;background:#f7f9fb;text-align:left;padding:10px;border-bottom:1px solid var(--line)}.store-table td{padding:11px 10px;border-bottom:1px solid #edf0f3;font-size:11px}
 .type,.state{display:inline-block;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900}.type.direct{background:#e8f1ff;color:#2e61ad}.state.good{background:#e7f5ee;color:#16734a}
 .roadmap{display:grid;gap:10px}.roadmap-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:11px}.roadmap-item>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#e9edf2;color:#647180;font-weight:900;font-size:11px}.roadmap-item strong,.roadmap-item small{display:block}.roadmap-item strong{font-size:11px}.roadmap-item small{font-size:10px;color:var(--muted);margin-top:3px}.roadmap-item.done>span{background:#dff3e9;color:#11734a}.roadmap-item.current{border-color:#d7c4a5;background:#fffaf2}.roadmap-item.current>span{background:#b58a52;color:#fff}
+.roadmap-panel{margin-top:14px}.roadmap-horizontal{grid-template-columns:repeat(4,minmax(0,1fr))}
 .module-hero{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:14px}
 .module-hero h2{margin:0 0 8px;font-size:20px}.module-hero p{margin:0;color:var(--muted);font-size:12px}
 .module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -97,9 +99,10 @@ button{cursor:pointer}
   .sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:translateX(0)}
   .main-area{margin-left:0;width:100%}.menu-toggle{display:block}.topbar{padding:0 14px}.content{padding:16px}
   .dashboard-grid,.dashboard-grid.lower{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .roadmap-horizontal{grid-template-columns:repeat(2,minmax(0,1fr))}
   .topbar-actions .user-chip{display:none}
 }
-@media(max-width:560px){.kpi-grid,.module-grid{grid-template-columns:1fr}.hero-card{flex-direction:column;align-items:flex-start}.quick-grid{grid-template-columns:1fr}.month-box{display:none}}
+@media(max-width:560px){.kpi-grid,.module-grid{grid-template-columns:1fr}.hero-card{flex-direction:column;align-items:flex-start}.quick-grid,.roadmap-horizontal{grid-template-columns:1fr}.month-box{display:none}}
 
 
 /* V2 전 점포 매출 현황 */
