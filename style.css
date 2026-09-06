@@ -68,11 +68,13 @@ button{cursor:pointer}
 .alert-item:hover{border-color:#c9d3de;background:#f9fbfd}
 .alert-item strong,.alert-item small{display:block}.alert-item strong{font-size:11px}.alert-item small{font-size:10px;color:var(--muted);margin-top:4px}.alert-item b{font-size:10px;color:var(--blue)}
 .dot{width:8px;height:8px;border-radius:50%}.dot.red{background:var(--red)}.dot.amber{background:var(--amber)}.dot.blue{background:var(--blue)}.dot.green{background:var(--green)}
-.attendance-roster-panel{min-height:330px}
+.attendance-roster-panel{height:406px;min-height:406px;max-height:406px;display:flex;flex-direction:column;overflow:hidden}
+.attendance-roster-panel .panel-head{flex:0 0 auto}
 .attendance-store-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:2px}
 .attendance-store-tab{flex:0 0 auto;border:1px solid var(--line);background:#f7f9fb;color:#617083;border-radius:999px;padding:7px 11px;font-size:10px;font-weight:900}
 .attendance-store-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
-.attendance-store-groups{display:grid;gap:10px;max-height:390px;overflow:auto;padding-right:3px}
+.attendance-store-groups{display:grid;align-content:start;gap:10px;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-gutter:stable}
+.attendance-store-groups::-webkit-scrollbar{width:8px}.attendance-store-groups::-webkit-scrollbar-thumb{background:#bcc6d1;border-radius:999px}.attendance-store-groups::-webkit-scrollbar-track{background:#eef2f5;border-radius:999px}
 .attendance-store-group{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
 .attendance-store-title{display:flex;justify-content:space-between;align-items:center;padding:10px 11px;background:#f7f9fb;border-bottom:1px solid var(--line)}
 .attendance-store-title strong{font-size:12px}.attendance-store-title span{font-size:10px;color:var(--muted);font-weight:800}
@@ -100,6 +102,7 @@ button{cursor:pointer}
   .main-area{margin-left:0;width:100%}.menu-toggle{display:block}.topbar{padding:0 14px}.content{padding:16px}
   .dashboard-grid,.dashboard-grid.lower{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}
   .roadmap-horizontal{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .attendance-roster-panel{height:420px;min-height:420px;max-height:420px}
   .topbar-actions .user-chip{display:none}
 }
 @media(max-width:560px){.kpi-grid,.module-grid{grid-template-columns:1fr}.hero-card{flex-direction:column;align-items:flex-start}.quick-grid,.roadmap-horizontal{grid-template-columns:1fr}.month-box{display:none}}
