@@ -1269,20 +1269,23 @@ function openModule(section,title){
 
 function handleQuickSystem(key){
   const map={
-    hr:HQ_BASE+"employee-admin.html",
+    managementDashboard:SYSTEM_LINKS.managementDashboard,
+    attendanceAdmin:SYSTEM_LINKS.attendanceAdmin,
+    notice:HQ_BASE+"notice.html",
+    salesInput:"https://script.google.com/macros/s/AKfycbyfytW-OyP84u1yaa4FJIF0EDclm_w6CWpY1rIDszzax7SfVuxF9KsDw5yfd53k0fb6Nw/exec",
     leave:SYSTEM_LINKS.leave,
-    contract:HQ_BASE+"contract-admin.html",
-    payroll:SYSTEM_LINKS.payroll,
-    directPayroll:"https://script.google.com/macros/s/AKfycbyzLLU_vboJprliPHe_MELBe-M9crwK9xRSHB20BoRCMjC-DFwJG5MEE3D_EtBCjGp0gg/exec",
+    trip:HQ_BASE+"trip.html",
+    opening:HQ_BASE+"store-opening.html",
     daily:SYSTEM_LINKS.daily,
-    sales:SYSTEM_LINKS.managementDashboard,
-    schedule:null
+    storeDashboard:SYSTEM_LINKS.storeDashboard,
+    mail:"https://mail.worksmobile.com",
+    drive:"https://drive.worksmobile.com"
   };
   if(map[key]){
     window.open(map[key],"_blank","noopener,noreferrer");
     return;
   }
-  const views={schedule:"schedule"};
+  const views={storePartTime:"payroll"};
   if(views[key]) openView(views[key]);
 }
 
