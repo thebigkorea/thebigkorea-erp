@@ -6,7 +6,7 @@ const PAGE_META = {
   hr:["통합인사","기존 본사 인사·증명서·퇴직 시스템을 한곳에서 연결합니다."],
   attendance:["근태 · 휴가","기존 출퇴근 및 연월차 시스템을 그대로 연결합니다."],
   contract:["전자계약","기존 정규직·아르바이트·용역계약과 계약관리대장을 연결합니다."],
-  payroll:["급여관리","기존 본사 급여·직영점 통합급여·아르바이트·일용직 시스템을 연결합니다."],
+  payroll:["급여관리","직영점 통합급여·아르바이트·일용직 시스템을 연결합니다."],
   tax:["4대보험 · 세무","4대보험 및 세무관리 기능을 순차적으로 통합합니다."],
   stores:["점포관리","기존 지점 인트라넷·출퇴근 관리자·영업실적 원장을 점포별로 연결합니다."],
   schedule:["근무스케줄","기존 점포별 주간·월간 스케줄 시스템을 연결합니다."],
@@ -50,7 +50,6 @@ const MODULES = {
     ["계약관리 / 대장","계약 서명상태 및 계약내역 관리","계약관리",HQ_BASE+"contract-admin.html"]
   ],
   payroll:[
-    ["본사 급여관리","현재 사용 중인 급여관리 시스템","급여관리","https://thebigkorea.github.io/thebigkorea-payroll-test/"],
     ["직영점 통합 급여관리","기존 직영점 통합 급여 작성·확정·명세서","통합급여","https://script.google.com/macros/s/AKfycbyzLLU_vboJprliPHe_MELBe-M9crwK9xRSHB20BoRCMjC-DFwJG5MEE3D_EtBCjGp0gg/exec"],
     ["일용직 관리","통합 근무내역·지급·신고자료 관리","일용직",HQ_BASE+"daily-worker.html"],
     ["한국의집 아르바이트","한국의집 롯데월드몰점 아르바이트 관리","관리화면","https://script.google.com/macros/s/AKfycbxvr3itmxIu-yO8yzKkcN0EcBH9TY41f4-E_jVIrCeGn8BxSmuAbmARlV9cXKGAN-aPRA/exec"],
