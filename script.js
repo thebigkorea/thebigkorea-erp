@@ -548,21 +548,49 @@ async function loadCompanyOperationStatus(){
     const employees=Array.isArray(employeeData.employees)?employeeData.employees:[];
     const activeEmployees=employees.filter(emp=>String(emp.status||"").trim()==="재직");
 
-    const regularCount=activeEmployees.filter(emp=>{
-      const type=String(emp.employmentType||"").trim().replace(/\s+/g,"");
-      return type==="정규직";
-    }).length;
+    function normalizeEmploymentGroup(item){
+      const raw=String(
+        (item && (item.employmentType || item.contractType)) || ""
+      ).trim();
+      const compact=raw.replace(/\s+/g,"");
 
-    const partTimeCount=activeEmployees.filter(emp=>{
-      const type=String(emp.employmentType||"").trim().replace(/\s+/g,"");
-      return type==="아르바이트" || type==="알바" || type==="파트타임";
-    }).length;
+      if(!compact) return "미분류";
+      if(compact.includes("정규") || compact.includes("정직")) return "정규직";
+      if(
+        compact.includes("아르바이트") ||
+        compact.includes("알바") ||
+        compact.includes("시급")
+      ) return "아르바이트";
+      if(compact.includes("사업소득")) return "사업소득자";
+      if(compact.includes("용역")) return "용역";
+      if(compact.includes("일용")) return "일용직";
+      if(compact.includes("계약")) return "계약직";
+      if(compact.includes("파견")) return "파견";
+      return raw || "미분류";
+    }
 
-    const otherCount=Math.max(0,activeEmployees.length-regularCount-partTimeCount);
+    const groups={};
+    activeEmployees.forEach(emp=>{
+      const group=normalizeEmploymentGroup(emp);
+      groups[group]=(groups[group]||0)+1;
+    });
+
+    const regularCount=groups["정규직"]||0;
+    const partTimeCount=groups["아르바이트"]||0;
+    const businessCount=groups["사업소득자"]||0;
+    const contractCount=groups["계약직"]||0;
+    const knownCount=regularCount+partTimeCount+businessCount+contractCount;
+    const otherCount=Math.max(0,activeEmployees.length-knownCount);
 
     if(employeeEl) employeeEl.textContent=`${activeEmployees.length}명`;
     if(regularEl) regularEl.textContent=`${regularCount}명`;
     if(partTimeEl) partTimeEl.textContent=`${partTimeCount}명`;
+
+    const businessEl=document.getElementById("kpiBusinessEmployees");
+    const contractEl=document.getElementById("kpiContractEmployees");
+    if(businessEl) businessEl.textContent=`${businessCount}명`;
+    if(contractEl) contractEl.textContent=`${contractCount}명`;
+
     if(otherEl){
       otherEl.textContent=`${otherCount}명`;
       const wrap=otherEl.closest(".employee-breakdown-item");
