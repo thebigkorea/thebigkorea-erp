@@ -523,73 +523,100 @@ async function loadCompanyOperationStatus(){
   const employeeEl=document.getElementById("kpiEmployees");
   const regularEl=document.getElementById("kpiRegularEmployees");
   const partTimeEl=document.getElementById("kpiPartTimeEmployees");
+  const businessEl=document.getElementById("kpiBusinessEmployees");
+  const contractEl=document.getElementById("kpiContractEmployees");
   const otherEl=document.getElementById("kpiOtherEmployees");
   const managedStoreEl=document.getElementById("kpiManagedStores");
 
+  function normalizeUnifiedEmployee(item){
+    item=item||{};
+    return {
+      employmentType:item.employmentType||"",
+      contractType:item.employmentType||item.contractType||"",
+      status:item.status||""
+    };
+  }
+
+  function normalizeEmploymentGroup(item){
+    const raw=String(
+      item.employmentType ||
+      item.contractType ||
+      ""
+    ).replace(/\s+/g,"").trim();
+
+    if(!raw) return "미분류";
+    if(raw.includes("정규") || raw.includes("정직")) return "정규직";
+    if(raw.includes("아르바이트") || raw.includes("알바") || raw.includes("시급")) return "아르바이트";
+    if(raw.includes("사업소득")) return "사업소득자";
+    if(raw.includes("용역")) return "용역";
+    if(raw.includes("일용")) return "일용직";
+    if(raw.includes("계약")) return "계약직";
+    if(raw.includes("파견")) return "파견";
+    return raw;
+  }
+
+  async function getHrApi(params){
+    const query=new URLSearchParams();
+    Object.keys(params||{}).forEach(key=>{
+      const value=params[key];
+      if(value!==undefined && value!==null && String(value)!==""){
+        query.set(key,String(value));
+      }
+    });
+    query.set("t",String(Date.now()));
+
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const res=await fetch(HR_API_URL+"?"+query.toString(),{
+        cache:"no-store",
+        signal:controller.signal
+      });
+      if(!res.ok) throw new Error("API 응답 오류: HTTP "+res.status);
+      return await res.json();
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+
   try{
-    const [employeeRes,storeRes]=await Promise.all([
-      fetch(`${HR_API_URL}?action=getEmployeesAdmin&status=${encodeURIComponent("재직")}&t=${Date.now()}`,{cache:"no-store"}),
-      fetch(`${HR_API_URL}?action=getStores&t=${Date.now()}`,{cache:"no-store"})
+    const [employeeData,storeData]=await Promise.all([
+      getHrApi({action:"getEmployeesAdmin"}),
+      getHrApi({action:"getStores"})
     ]);
 
-    if(!employeeRes.ok) throw new Error(`직원 API HTTP ${employeeRes.status}`);
-    if(!storeRes.ok) throw new Error(`점포 API HTTP ${storeRes.status}`);
-
-    const employeeData=await employeeRes.json();
-    const storeData=await storeRes.json();
-
-    if(!(employeeData.ok||employeeData.success)) {
-      throw new Error(employeeData.message||"재직 직원 조회 실패");
+    if(!employeeData.ok && !employeeData.success){
+      throw new Error(employeeData.message||"직원 조회 실패");
     }
-    if(!(storeData.ok||storeData.success)) {
-      throw new Error(storeData.message||"운영 점포 조회 실패");
+    if(!storeData.ok && !storeData.success){
+      throw new Error(storeData.message||"점포 조회 실패");
     }
 
-    const employees=Array.isArray(employeeData.employees)?employeeData.employees:[];
-    const activeEmployees=employees.filter(emp=>String(emp.status||"").trim()==="재직");
+    const rows=Array.isArray(employeeData.employees)
+      ? employeeData.employees.map(normalizeUnifiedEmployee)
+      : [];
 
-    function normalizeEmploymentGroup(item){
-      const raw=String(
-        (item && (item.employmentType || item.contractType)) || ""
-      ).trim();
-      const compact=raw.replace(/\s+/g,"");
+    // 인사관리대장 '재직' 탭과 동일한 필터
+    const activeEmployees=rows.filter(item=>
+      String(item.status||"").trim()==="재직"
+    );
 
-      if(!compact) return "미분류";
-      if(compact.includes("정규") || compact.includes("정직")) return "정규직";
-      if(
-        compact.includes("아르바이트") ||
-        compact.includes("알바") ||
-        compact.includes("시급")
-      ) return "아르바이트";
-      if(compact.includes("사업소득")) return "사업소득자";
-      if(compact.includes("용역")) return "용역";
-      if(compact.includes("일용")) return "일용직";
-      if(compact.includes("계약")) return "계약직";
-      if(compact.includes("파견")) return "파견";
-      return raw || "미분류";
-    }
-
-    const groups={};
-    activeEmployees.forEach(emp=>{
-      const group=normalizeEmploymentGroup(emp);
-      groups[group]=(groups[group]||0)+1;
+    const grand={};
+    activeEmployees.forEach(item=>{
+      const group=normalizeEmploymentGroup(item);
+      grand[group]=Number(grand[group]||0)+1;
     });
 
-    const regularCount=groups["정규직"]||0;
-    const partTimeCount=groups["아르바이트"]||0;
-    const businessCount=groups["사업소득자"]||0;
-    const contractCount=groups["계약직"]||0;
-    const knownCount=regularCount+partTimeCount+businessCount+contractCount;
-    const otherCount=Math.max(0,activeEmployees.length-knownCount);
-
     if(employeeEl) employeeEl.textContent=`${activeEmployees.length}명`;
-    if(regularEl) regularEl.textContent=`${regularCount}명`;
-    if(partTimeEl) partTimeEl.textContent=`${partTimeCount}명`;
+    if(regularEl) regularEl.textContent=`${Number(grand["정규직"]||0)}명`;
+    if(partTimeEl) partTimeEl.textContent=`${Number(grand["아르바이트"]||0)}명`;
+    if(businessEl) businessEl.textContent=`${Number(grand["사업소득자"]||0)}명`;
+    if(contractEl) contractEl.textContent=`${Number(grand["계약직"]||0)}명`;
 
-    const businessEl=document.getElementById("kpiBusinessEmployees");
-    const contractEl=document.getElementById("kpiContractEmployees");
-    if(businessEl) businessEl.textContent=`${businessCount}명`;
-    if(contractEl) contractEl.textContent=`${contractCount}명`;
+    const shownGroups=["정규직","아르바이트","사업소득자","계약직"];
+    const otherCount=Object.keys(grand)
+      .filter(group=>!shownGroups.includes(group))
+      .reduce((sum,group)=>sum+Number(grand[group]||0),0);
 
     if(otherEl){
       otherEl.textContent=`${otherCount}명`;
@@ -598,16 +625,13 @@ async function loadCompanyOperationStatus(){
     }
 
     const stores=Array.isArray(storeData.stores)?storeData.stores:[];
-    const directStoreCount=4;
-    const managedStoreCount=Math.max(0,stores.length-directStoreCount);
-    if(managedStoreEl) managedStoreEl.textContent=`${managedStoreCount}개`;
+    if(managedStoreEl) managedStoreEl.textContent=`${Math.max(0,stores.length-4)}개`;
 
   }catch(error){
     console.error("회사 운영현황 조회 실패:",error);
-    if(employeeEl) employeeEl.textContent="-명";
-    if(regularEl) regularEl.textContent="-명";
-    if(partTimeEl) partTimeEl.textContent="-명";
-    if(otherEl) otherEl.textContent="-명";
+    [employeeEl,regularEl,partTimeEl,businessEl,contractEl,otherEl].forEach(el=>{
+      if(el) el.textContent="-명";
+    });
     if(managedStoreEl) managedStoreEl.textContent="-개";
   }
 }
