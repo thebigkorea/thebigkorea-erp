@@ -154,6 +154,8 @@ const SYSTEM_LINKS = {
 
 const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
 
+const HR_API_URL = "https://script.google.com/macros/s/AKfycbwRGQcXgYhfkTUiklPrHs4uFe7oHpgn8D_jM2jJPpU74tXr3D_h6vGMq72CHXU0EnAb/exec";
+
 /* 네 출퇴근 Apps Script의 최신 /exec 배포 주소 */
 const ATTENDANCE_STORES = [
   {name:"더큰코리아 본사",url:"https://script.google.com/macros/s/AKfycbzRL0MceE5NfdEro8Og1VnjLhTc-pcCXKl0d3hXV8u8A3mNoRBBrTEfGdMtp2ohotWx/exec"},
@@ -516,6 +518,72 @@ function escapeHtml(v){
     .replace(/'/g,"&#039;");
 }
 
+
+async function loadCompanyOperationStatus(){
+  const employeeEl=document.getElementById("kpiEmployees");
+  const regularEl=document.getElementById("kpiRegularEmployees");
+  const partTimeEl=document.getElementById("kpiPartTimeEmployees");
+  const otherEl=document.getElementById("kpiOtherEmployees");
+  const managedStoreEl=document.getElementById("kpiManagedStores");
+
+  try{
+    const [employeeRes,storeRes]=await Promise.all([
+      fetch(`${HR_API_URL}?action=getEmployeesAdmin&status=${encodeURIComponent("재직")}&t=${Date.now()}`,{cache:"no-store"}),
+      fetch(`${HR_API_URL}?action=getStores&t=${Date.now()}`,{cache:"no-store"})
+    ]);
+
+    if(!employeeRes.ok) throw new Error(`직원 API HTTP ${employeeRes.status}`);
+    if(!storeRes.ok) throw new Error(`점포 API HTTP ${storeRes.status}`);
+
+    const employeeData=await employeeRes.json();
+    const storeData=await storeRes.json();
+
+    if(!(employeeData.ok||employeeData.success)) {
+      throw new Error(employeeData.message||"재직 직원 조회 실패");
+    }
+    if(!(storeData.ok||storeData.success)) {
+      throw new Error(storeData.message||"운영 점포 조회 실패");
+    }
+
+    const employees=Array.isArray(employeeData.employees)?employeeData.employees:[];
+    const activeEmployees=employees.filter(emp=>String(emp.status||"").trim()==="재직");
+
+    const regularCount=activeEmployees.filter(emp=>{
+      const type=String(emp.employmentType||"").trim().replace(/\s+/g,"");
+      return type==="정규직";
+    }).length;
+
+    const partTimeCount=activeEmployees.filter(emp=>{
+      const type=String(emp.employmentType||"").trim().replace(/\s+/g,"");
+      return type==="아르바이트" || type==="알바" || type==="파트타임";
+    }).length;
+
+    const otherCount=Math.max(0,activeEmployees.length-regularCount-partTimeCount);
+
+    if(employeeEl) employeeEl.textContent=`${activeEmployees.length}명`;
+    if(regularEl) regularEl.textContent=`${regularCount}명`;
+    if(partTimeEl) partTimeEl.textContent=`${partTimeCount}명`;
+    if(otherEl){
+      otherEl.textContent=`${otherCount}명`;
+      const wrap=otherEl.closest(".employee-breakdown-item");
+      if(wrap) wrap.hidden=otherCount===0;
+    }
+
+    const stores=Array.isArray(storeData.stores)?storeData.stores:[];
+    const directStoreCount=4;
+    const managedStoreCount=Math.max(0,stores.length-directStoreCount);
+    if(managedStoreEl) managedStoreEl.textContent=`${managedStoreCount}개`;
+
+  }catch(error){
+    console.error("회사 운영현황 조회 실패:",error);
+    if(employeeEl) employeeEl.textContent="-명";
+    if(regularEl) regularEl.textContent="-명";
+    if(partTimeEl) partTimeEl.textContent="-명";
+    if(otherEl) otherEl.textContent="-명";
+    if(managedStoreEl) managedStoreEl.textContent="-개";
+  }
+}
+
 function init(){
   const month = document.getElementById("erpMonth");
   const now = new Date();
@@ -555,6 +623,7 @@ function init(){
   buildHqTaskView();
   renderHqTaskView();
   updateHomeHqTaskSummary();
+  loadCompanyOperationStatus();
   loadFundData();
   loadAllStoreAttendance();
   loadErpStoreSales();
