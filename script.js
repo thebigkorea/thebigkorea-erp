@@ -15,7 +15,7 @@ const PAGE_META = {
   hqtasks:["본사 업무관리","본사에서 매일·매월·분기별로 처리해야 하는 업무와 마감일정을 관리합니다."],
   operations:["운영지원","기존 매장점검대시보드와 공지사항을 연결합니다."],
   settlement:["월정산","기존 점포별 정산입력·정산관리·월별합산·원장을 연결합니다."],
-  travel:["차량 · 출장","기존 법인차량·출장등록·승인·이동비·운행원장을 연결합니다."],
+  travel:["차량 · 출장","법인차량 관리와 출장 신청·승인·정산을 통합 연결합니다."],
   tools:["업무도구","본사에서 사용하는 네이버웍스 메일과 공용 드라이브를 연결합니다."],
   admin:["원장 · 관리자","기존 본사 원장과 관리자 화면을 한곳에서 연결합니다."],
   purchase:["매입 · 원가","직영점을 중심으로 발주·매입·식재료 원가를 관리합니다."],
@@ -102,9 +102,7 @@ const MODULES = {
   travel:[
     ["차량관리","법인차량 운행 등록 및 관리","차량관리",HQ_BASE+"vehicle.html"],
     ["차량 관리자 대시보드","법인차량 관리자 조회","관리자",HQ_BASE+"vehicle-admin.html"],
-    ["출장등록","출장 일정 및 목적 등록","출장등록",HQ_BASE+"trip.html"],
-    ["출장 승인관리","출장 신청 관리자 승인","승인관리",HQ_BASE+"trip-admin.html"],
-    ["이동비 현황","출장·이동비 현황 조회","이동비",HQ_BASE+"trip-expense.html"],
+    ["출장 통합관리","출장 신청·승인·정산 및 전체 출장 현황 관리","통합관리",HQ_BASE+"trip-management.html"],
     ["운행원장","기존 법인차량 운행 Google Sheet 원장","운행원장","https://docs.google.com/spreadsheets/d/18Z9qf4_dQt3qpwk7K5hbIT1q4iRDVZCK1Z-tX6CnBi0/edit?gid=0#gid=0"]
   ],
   tools:[
@@ -114,7 +112,7 @@ const MODULES = {
   admin:[
     ["인사관리대장","본사 관리자 인사관리대장","인사관리",HQ_BASE+"hr-list.html"],
     ["연월차 관리 시트 원장","연월차 Google Sheet 원장","연월차 원장","https://docs.google.com/spreadsheets/d/1HzUpTGgVmd74kz1DB4QWbe5t9SutlYunGCf2iLbVaE4/edit?gid=319299006#gid=319299006"],
-    ["출장 승인관리","출장 관리자 승인화면","출장 승인",HQ_BASE+"trip-admin.html"],
+    ["출장 통합관리","출장 신청·승인·정산 및 전체 출장 현황 관리","출장 통합관리",HQ_BASE+"trip-management.html"],
     ["차량 관리자","법인차량 관리자 화면","차량 관리자",HQ_BASE+"vehicle-admin.html"],
     ["통합 실적 원장","기존 통합 실적 원장","실적 원장","https://script.google.com/macros/s/AKfycbx5BwuumKLdSkx_EB_u0ocLgoRD4JPAGgIE8xiSDpypTCZO5IfmFgwj1tYeEF006t1ngA/exec"],
     ["운행원장","법인차량 Google Sheet 원장","운행원장","https://docs.google.com/spreadsheets/d/18Z9qf4_dQt3qpwk7K5hbIT1q4iRDVZCK1Z-tX6CnBi0/edit?gid=0#gid=0"],
@@ -150,7 +148,8 @@ const SYSTEM_LINKS = {
   leave: "https://thebigkorea.github.io/thebigkorea-leave-new/",
   attendanceAdmin: "https://thebigkorea.github.io/thebigkorea-attendance/admin.html",
   daily: HQ_BASE+"daily-worker.html",
-  storeDashboard: HQ_BASE+"store-dashboard.html"
+  storeDashboard: HQ_BASE+"store-dashboard.html",
+  trip: HQ_BASE+"trip-management.html"
 };
 
 const FUND_API_URL = "https://script.google.com/macros/s/AKfycbwr2mdmWMCUbQmHbCVXeXe_SjN-pa39GL7MYmuHlxIv31oU7Eg9MN5J-V-NkYuHBQKO/exec";
