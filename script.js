@@ -1337,11 +1337,92 @@ function updateHomeHqTaskSummary(){
   item.onclick=()=>openView("hqtasks");alertList.prepend(item);
 }
 
+function buildStoresView(){
+  const el=document.getElementById("view-stores");
+  if(!el)return;
+
+  const stores=[
+    {
+      name:"한국의집 잠실",
+      sub:"롯데월드몰",
+      links:[
+        ["인트라넷","한국의집 롯데월드몰 인트라넷"],
+        ["출퇴근 관리자 조회","한국의집 출퇴근 관리자"],
+        ["영업실적","한국의집 영업실적 원장"]
+      ]
+    },
+    {
+      name:"압구정 길채정",
+      sub:"갤러리아 압구정",
+      links:[
+        ["인트라넷","길채정 압구정 인트라넷"],
+        ["출퇴근 관리자 조회","길채정 출퇴근 관리자"],
+        ["영업실적","길채정 영업실적 원장"]
+      ]
+    },
+    {
+      name:"평촌 소바공방",
+      sub:"롯데백화점 평촌점",
+      links:[
+        ["인트라넷","소바공방 평촌 인트라넷"],
+        ["출퇴근 관리자 조회","소바공방 출퇴근 관리자"],
+        ["영업실적","소바공방 영업실적 원장"]
+      ]
+    },
+    {
+      name:"파주 효종갱",
+      sub:"신세계 파주 프리미엄아울렛",
+      links:[
+        ["인트라넷","효종갱 파주 인트라넷"]
+      ]
+    }
+  ];
+
+  el.innerHTML=`
+    <section class="module-hero legacy-hero">
+      <div>
+        <span class="eyebrow">STORE MANAGEMENT</span>
+        <h2>지점 관리</h2>
+        <p>기존 본사 업무포털의 지점별 인트라넷과 주요 관리업무를 ERP에서 바로 연결합니다.</p>
+      </div>
+      <div class="legacy-count"><strong>4</strong><span>직영점 연결</span></div>
+    </section>
+
+    <div class="module-grid legacy-module-grid">
+      ${stores.map(store=>`
+        <article class="module-card linked">
+          <div class="module-card-top">
+            <span class="system-state live">운영중</span>
+          </div>
+          <h3>${escapeHtml(store.name)}</h3>
+          <p>${escapeHtml(store.sub)}</p>
+          <div style="display:grid;gap:9px;margin-top:18px;">
+            ${store.links.map(([label,title],idx)=>`
+              <button
+                style="${idx===0?'font-weight:800;':''}"
+                onclick="openModule('stores','${escapeJs(title)}')">
+                ${escapeHtml(label)} ↗
+              </button>
+            `).join("")}
+          </div>
+        </article>
+      `).join("")}
+    </div>
+
+    <div class="note-box">
+      <strong>기존 지점관리 연동:</strong>
+      한국의집 잠실 · 압구정 길채정 · 평촌 소바공방은 인트라넷/출퇴근 관리자/영업실적을 연결하고,
+      파주 효종갱은 현재 기존 포털과 동일하게 인트라넷을 연결합니다.
+    </div>
+  `;
+}
+
 function buildModuleViews(){
   buildFundView();
+  buildStoresView();
 
   Object.entries(MODULES).forEach(([key,items])=>{
-    if(key==="fund") return;
+    if(key==="fund" || key==="stores") return;
     const el=document.getElementById(`view-${key}`);
     if(!el)return;
     const meta=PAGE_META[key]||[key,""];
