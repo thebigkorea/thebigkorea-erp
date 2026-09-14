@@ -6,15 +6,154 @@
   <title>더큰코리아 통합 ERP</title>
   <meta name="description" content="더큰코리아 통합 ERP - 인사·급여·점포·경영관리 통합 시스템" />
   <link rel="stylesheet" href="style.css?v=16" />
+
+  <style>
+    /* ===== ERP 홈 상단/브랜드 정렬 개선 ===== */
+    .brand.brand-premium{
+      min-height:92px;
+      display:flex;
+      align-items:center;
+      gap:13px;
+      padding:17px 20px;
+      box-sizing:border-box;
+    }
+    .brand-mark.brand-mark-premium{
+      position:relative;
+      flex:0 0 56px;
+      width:56px;
+      height:56px;
+      border-radius:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:linear-gradient(145deg,#172235 0%,#0d1625 100%);
+      border:2px solid #caa45e;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,232,176,.18),
+        0 7px 18px rgba(0,0,0,.24);
+    }
+    .brand-mark-premium::before{
+      content:"";
+      position:absolute;
+      inset:4px;
+      border:1px solid rgba(237,203,131,.28);
+      border-radius:11px;
+      pointer-events:none;
+    }
+    .brand-tk{
+      position:relative;
+      z-index:2;
+      transform:translateY(-2px);
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:25px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-2px;
+      color:#e5bf73;
+      text-shadow:0 1px 0 #fff0c4,0 2px 5px rgba(0,0,0,.35);
+    }
+    .brand-swoosh{
+      position:absolute;
+      z-index:1;
+      left:11px;
+      right:9px;
+      bottom:12px;
+      height:10px;
+      border-bottom:2px solid #e2b763;
+      border-radius:0 0 50% 50%;
+      transform:rotate(-5deg);
+    }
+    .brand-copy{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:2px;
+    }
+    .brand-copy strong{
+      color:#fff;
+      font-size:19px;
+      line-height:1.2;
+      letter-spacing:-.4px;
+      white-space:nowrap;
+    }
+    .brand-copy span{
+      color:#aeb8c8;
+      font-size:12px;
+      line-height:1.2;
+    }
+    .brand-copy small{
+      margin-top:2px;
+      color:#caa45e;
+      font-size:8px;
+      line-height:1;
+      letter-spacing:1.05px;
+      white-space:nowrap;
+    }
+
+    /* 상단 제목과 기준월/새로고침을 정확히 같은 높이로 */
+    .topbar{
+      min-height:104px;
+      display:flex;
+      align-items:center;
+      box-sizing:border-box;
+    }
+    .topbar-left,
+    .topbar-actions{
+      display:flex;
+      align-items:center;
+    }
+    .topbar-actions{
+      gap:12px;
+      margin-left:auto;
+    }
+    .month-box{
+      margin:0 !important;
+      display:flex !important;
+      flex-direction:column;
+      justify-content:center;
+      min-height:62px;
+      box-sizing:border-box;
+    }
+    .month-box input{
+      height:44px;
+      box-sizing:border-box;
+    }
+    #refreshBtn.icon-btn{
+      align-self:flex-end;
+      height:44px;
+      min-height:44px;
+      margin:0 0 0 0 !important;
+      box-sizing:border-box;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+    .user-chip{display:none !important;}
+
+    @media (max-width:900px){
+      .brand.brand-premium{padding:14px 16px;}
+      .brand-copy small{display:none;}
+      .topbar{align-items:flex-start;}
+      .topbar-actions{align-items:flex-end;}
+    }
+  </style>
+
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-mark">TK</div>
-        <div>
+      <div class="brand brand-premium">
+        <div class="brand-mark brand-mark-premium">
+          <span class="brand-tk">TK</span>
+          <span class="brand-swoosh"></span>
+        </div>
+        <div class="brand-copy">
           <strong>더큰코리아</strong>
           <span>통합 ERP</span>
+          <small>THE BIG KOREA</small>
         </div>
       </div>
 
@@ -69,10 +208,7 @@
             <input type="month" id="erpMonth" />
           </label>
           <button class="icon-btn" id="refreshBtn">⟳ 새로고침</button>
-          <div class="user-chip">
-            <span class="user-avatar">관</span>
-            <div><strong>관리자</strong><small>본사 ERP</small></div>
-          </div>
+
         </div>
       </header>
 
@@ -274,6 +410,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=19"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
