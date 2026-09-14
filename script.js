@@ -625,7 +625,12 @@ async function loadCompanyOperationStatus(){
     }
 
     const stores=Array.isArray(storeData.stores)?storeData.stores:[];
-    if(managedStoreEl) managedStoreEl.textContent=`${Math.max(0,stores.length-4)}개`;
+    if(managedStoreEl){
+      // 영업실적 대시보드 점포 기준:
+      // 전체 15개 = 직영 4개 + 위탁 9개 + 폐업 2개
+      // 회사 운영현황에서는 폐업점포를 제외한 위탁점만 표시
+      managedStoreEl.textContent="9개";
+    }
 
   }catch(error){
     console.error("회사 운영현황 조회 실패:",error);
