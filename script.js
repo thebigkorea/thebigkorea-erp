@@ -312,7 +312,7 @@ function setSalesDashboardData(payload){
     const current=numberOrZero(s.current ?? s.monthSales ?? s.selectedMonthSales);
     const compare=numberOrZero(s.previousYearPeriod ?? s.previousPeriod ?? s.previousYearSales);
     const comparison=compare ? changeHtml(current,compare) : '<span class="sales-change same">비교자료 없음</span>';
-    return `<button class="sales-store-card" type="button" onclick="handleQuickSystem('sales')">
+    return `<button class="sales-store-card" type="button" onclick="handleQuickSystem('managementDashboard')">
       <span class="sales-store-name">${escapeHtml(s.displayName)}</span>
       <strong>${s.found?money(current):"자료 없음"}</strong>
       <small>선택 월 매출</small>
