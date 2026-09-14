@@ -677,7 +677,7 @@ function setFundData(payload){
   fundState.filtered=[...fundState.transactions];
   if(document.getElementById("fundDashboard")){
     initFundDateRange(true);
-    applyFundFilters(false);
+    applyFundFilters(true);
   }
 }
 
@@ -733,7 +733,7 @@ function buildFundView(){
         <section class="panel fund-account-panel">
           <div class="panel-head">
             <div><h3>계좌 현황</h3><p>연결된 법인계좌의 현재 잔액</p></div>
-            <button class="text-btn" type="button" onclick="loadFundData()">ECOUNT 다시 불러오기</button>
+            <button class="text-btn" id="fundReloadBtn" type="button">ECOUNT 다시 불러오기</button>
           </div>
           <div id="fundAccountList" class="fund-account-list"></div>
         </section>
@@ -755,8 +755,8 @@ function buildFundView(){
             <p>거래일시 · 입출금 · 금액 · 잔액 · 적요 · 거래처 · 회계처리 상태를 최근 거래순으로 조회합니다.</p>
           </div>
           <div class="fund-actions">
-            <button class="fund-btn secondary" type="button" onclick="resetFundFilters()">최근 3일</button>
-            <button class="fund-btn primary" type="button" onclick="applyFundFilters()">조회</button>
+            <button class="fund-btn secondary" id="fundRecent3Btn" type="button">최근 3일</button>
+            <button class="fund-btn primary" id="fundSearchBtn" type="button">조회</button>
           </div>
         </div>
 
@@ -786,6 +786,9 @@ function buildFundView(){
         </div>
       </section>
     </div>`;
+  document.getElementById("fundReloadBtn")?.addEventListener("click",loadFundData);
+  document.getElementById("fundRecent3Btn")?.addEventListener("click",resetFundFilters);
+  document.getElementById("fundSearchBtn")?.addEventListener("click",()=>applyFundFilters());
   initFundDateRange(true);
   renderFundDashboard();
 }
@@ -795,12 +798,8 @@ function initFundDateRange(force=false){
   const startInput=document.getElementById("fundStartDate");
   if(!endInput||!startInput)return;
 
-  let endDate="";
-  if(fundState.transactions.length){
-    endDate=fundState.transactions.map(t=>fundDateValue(t.date||t.datetime)).filter(Boolean).sort().pop()||"";
-  }
-
-  let end=endDate ? new Date(endDate+"T12:00:00") : new Date();
+  // 최근 3일은 수집자료의 마지막 날짜가 아니라 실제 오늘을 기준으로 합니다.
+  let end=new Date();
   let start=new Date(end);
   start.setDate(end.getDate()-2); // 오늘 포함 3일
 
